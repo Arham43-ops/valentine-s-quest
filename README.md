@@ -1,57 +1,84 @@
-# Love Quest 💕
+# 💕 Valentine's Quest: A Romantic Journey ✨
 
-A charming pixel-art platformer game built for Valentine's Day. Help the protagonist navigate through levels, propose to their Valentine, and answer fun questions to reach the romantic finale.
+[![License: MIT](https://img.shields.io/badge/License-MIT-pink.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 
-## 🚀 Getting Started
+Welcome to **Valentine's Quest**, a charming pixel-art platformer designed to be the perfect digital gift! Navigate through treacherous platforms, propose to your dearest, and embark on a quest that ends in a heartfelt love letter.
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- npm or bun
+---
 
-### Installation
-1. Clone the repository:
+## 🌟 Key Features
+
+- **🎨 Retro Pixel-Art Aesthetic**: Beautifully rendered 2D environments with a romantic color palette.
+- **✨ Smooth Gameplay Mechanics**: Includes a **Double Jump** ability for precise platforming.
+- **🎼 Mario-Inspired Soundscape**: Softer, high-quality synth tones and "jingle" effects for a premium feel.
+- **💌 Heartfelt Finale**: A custom-designed, scroll-free Love Letter screen with a natural, cute narrative.
+- **📱 Responsive Design**: Fully playable on both Desktop (Keyboard) and Mobile (Touch Controls).
+
+---
+
+## 🎮 The Quest Stages
+
+1. **Stage 1: Reach the Start** 🏃‍♀️
+   Learn the ropes and reach the starting platform. Don't forget your **Double Jump** (Space/W twice)!
+   
+2. **Stage 2: The Proposal** 💍
+   Approach the "YES" platform to pop the question. Careful—the "NO" platform has a mind of its own!
+
+3. **Stage 3: Romantic Q&A** ❓
+   Jump into the `?` blocks to answer 6 fun questions about your relationship and plans.
+
+4. **Stage 4: Catch the Letter** 💌
+   Chase down (or simply catch) the escaping love letter to reveal the final message.
+
+---
+
+## 🚀 Quick Start
+
+### 📦 Installation
+
+1. **Clone the repo**
    ```sh
-   git clone <repository-url>
-   cd valentine-s-quest-main
+   git clone https://github.com/Arham43-ops/valentine-s-quest.git
+   cd valentine-s-quest
    ```
-2. Install dependencies:
+
+2. **Install dependencies**
    ```sh
    npm install
    ```
-3. Start the development server:
+
+3. **Launch the Quest**
    ```sh
    npm run dev
    ```
-4. Open [http://localhost:8080](http://localhost:8080) in your browser.
 
-## 🎮 How to Play
-- **Move**: `←` `→` or `A` / `D` keys
-- **Jump**: `Space`, `W`, or `↑` keys
-- **Goal**: Reach the checkpoint in each stage.
-    - **Stage 1**: Navigate simple platforms to reach the "START".
-    - **Stage 2**: Approach the "YES" platform to propose. (The "NO" platform might be hard to catch!)
-    - **Stage 3**: Jump into the `?` blocks to answer romantic questions.
-
-## 🛠️ Tech Stack
-- **Framework**: [React](https://react.dev/)
-- **Build Tool**: [Vite](https://vitejs.dev/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/)
-- **State/Data**: [TanStack Query](https://tanstack.com/query/latest)
-- **Audio**: Custom `AudioManager` using Web Audio API
-
-## 📁 Project Structure
-- `src/components/game`: Core game logic, renderer, and components.
-    - `Game.tsx`: Main game loop and state management.
-    - `renderer.ts`: Custom pixel-art canvas rendering logic.
-    - `AudioManager.ts`: Sound effects and background music controller.
-- `src/pages`: Application pages (Index and NotFound).
-
-## 📜 Commands
-- `npm run dev`: Starts the development server.
-- `npm run build`: Builds the project for production.
-- `npm run lint`: Runs ESLint for code quality.
-- `npm run test`: Runs unit tests with Vitest.
+### 🎮 Controls
+| Action | Keyboard | Mobile |
+| :--- | :--- | :--- |
+| **Move** | `←` `→` or `A` / `D` | On-screen Arrows |
+| **Jump** | `Space`, `W`, or `↑` | On-screen Up Arrow |
+| **Double Jump** | Double Tap Jump | Double Tap Arrow |
 
 ---
-Built with ❤️ for Valentine's Day.
+
+## 🛠️ Tech Stack
+
+- **Core**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, Lucide React
+- **Audio**: Custom Web Audio API Synth (`AudioManager`)
+- **Canvas**: Low-level 2D Context Rendering for that authentic pixel look
+
+## 📜 Available Commands
+
+- `npm run dev` - Start local development server
+- `npm run build` - Create production-ready bundle
+- `npm run lint` - Check for code quality issues
+- `npm run preview` - Locally preview the production build
+
+---
+
+<p align="center">
+  Built with ❤️ for a very special Valentine.
+</p>
