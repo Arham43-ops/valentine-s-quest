@@ -21,7 +21,7 @@ export default function QuestionPopup({ questionIndex, onAnswer }: Props) {
 
         {/* Question text */}
         <h3 className="font-pixel text-valentine-red text-[10px] md:text-xs text-center mb-4 leading-relaxed">
-          ❤️ {question.text}
+          {question.text}
         </h3>
 
         {/* Answer buttons */}
