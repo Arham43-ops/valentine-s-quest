@@ -73,3 +73,5 @@ export const QUESTIONS: Question[] = [
     answers: ["Lots of Laughs", "Good Conversation", "Trying Something New", "Just Spending Quality Time"],
   },
 ];
+
+export type GameStage = 'loading' | 'stage1' | 'stage2' | 'stage3' | 'stage4' | 'summary';
