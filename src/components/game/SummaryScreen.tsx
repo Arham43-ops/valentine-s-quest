@@ -1,37 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface Props {
   onRestart: () => void;
 }
 
-const PHOTOS = [
-  "data:image/webp;base64,UklGRqybAABXRUJQVlA4IKCbAAAwDASdASpqAkwEPnk6mUkkoysxIzKbEiAPCWdtfeFe/ba25del1iBF1nWnlhPrxwSl9BPsf+b19/QP9nyteX/3ndi6Ae/9oBeRR+580/7B/lunL/2PR6/Vv+f1Cv+nzGhvI/+ndP151WnDWZRc/f+/8cIP4d/5PPJ8e/x/+3w7/v91euTL4fxV8CPyT7GUjlxH7/Y4/7XoR+m/8Dzf/UfyzPvXqK+Tf/xefn88ICwCrGVrf4MRS/RIE9jgN6jwGq4L6/ygAAdrW5UOnss5Kvg7/BEZ5SZRqHwoheAlTVXRLAV7lkt8I+rKQCrs/1HTwtWMrcnxRMhYAHpksE18xRNR8zRY6ziiaRr5N5YO/IufebUk6n+nbWFfXxITeiCMYmB48D02kNa/M71Xu4ITbaGfpBJsoi/crMFOxF9Zjj8vQCY/xJ/0DKqGlZf9b7/EI6JcSp1MqHmwYqvSY4z3n7ecruh8fuwy1JyhDU6iP/mY0O3EkoH01zDxBTWh9pRjXwOD+Q6hszgdcaP8xONuBWDbBG/xC8K+0aVSJAtnq6W5Xgr1lPV8qi+OaYTrFPgLk8CcuijJWuWHW9/bG72oAzFHd+Uih/HD2NIgo4AeziNjSryZD7nV6cnbJtXzWj/IKPbWOQEH3+PE//RbwjDE2r61+4wMUuGMZYqyVP30Tdh9qeIC8Zl3gbfsIr2CI9LkBza6MPeQOrGlSnl9asD0kRC7KHpMHcEvm3LSdtCOWQs5xe2CPyJLTljazYvVJfRQaQhKdyWXsj4Cmbi/u5wuiiKHxgzqKh5Kqn6UB3ZUPLST134lkVXcQNlydf1SdItRpQl0VnGWjIbv/eCWNDV62s/CkrEQFUGxRi8jd3t3SeFBT9uKc/JBHWUgtY85ZP2E8dpw4vsVOZouCThQZF2vuw2G1E7RXKxnki1ttM4Ke93FZtNggSuEQ2UkvOCs/bYGQ44xBJE9dvXunQ6gqDGakZhLq4n6UbO/FEpJ1A1HvK5xwctwfwISzAKpi1DQSxtfMZXBUC+8k2uVDzg0Xf5VcY9+ftsJ8/mfVa7SKEcJF71wTQ6hBm6owa/vtwjtfax/r9/FJPcRz4K7uoM7uFEeRrOOxOhmJdMOUQTGGjyA5PAZEd4Gh8afXf2mauhe8+8zowfKnj8u3V34aUPutD0+wumPu4JLoGpQbUzD6eeyRJWu+3rSJnX+A953139z8q/HmqM6lr1SJsfuZMfYjj1cLffIKWLVmMR264Dt8wV9+QTIZLvBVgkctfk5apIQpE61RBxuq47oQ9hFCDAYmk8sOXErWueCtlJbsZXHNUkxF2+Xe/h68ie5MY6xMbfMJja4cFsKqiaotfRlUSkXn6eCzTkB+57ui7sLVir/pQNZC+WlDDwn9IXWEQ4wd/kmtIVRLVJ+sZIBcjzGSEfPKluH3bPf8EgB7R9NqN25nPCX9quYvbnFKMbaZsqWqmnLpgusr7dvsynsMDavL+E6Q4VEhGZ8aFOIseJEeCuX3gHVPIE+9q6owt/nTtL+cVPKEE+74vJ2UGg6G8gK1Klb7OwowUZ2lnjX1usY/MRPp6/kYFlWn04/kMg0zQBOyxH8M61LRtcaDvmPwAt591ljV8sCivpKHmpomEh84hch6z1o4cjZZlWFzqfRV3gjkeqrsSQVzGgc2ZJB2GMWP1q/A8Y8btPCCDYz9HB2/yM+/pF1Xg7k+MoHdRpKwxU8LqJmsuUC5rFtKGbVgIv3o00/FLyTH5ULs3495+tZEFTqYlDGaFCLEaL+hEyMwze1ggioXOtODO6K341W76rwHvy7ZKvKW9p3Ti+ekL6CHwNT2nOEFqkPyF44YI/DIjCR4dXZrRpHacJ",
-  "data:image/webp;base64,UklGRqybAABXRUJQVlA4IKCbAAAwDASdASpqAkwEPnk6mUkkoysxIzKbEiAPCWdtfeFe/ba25del1iBF1nWnlhPrxwSl9BPsf+b19/QP9nyteX/3ndi6Ae/9oBeRR+580/7B/lunL/2PR6/Vv+f1Cv+nzGhvI/+ndP151WnDWZRc/f+/8cIP4d/5PPJ8e/x/+3w7/v91euTL4fxV8CPyT7GUjlxH7/Y4/7XoR+m/8Dzf/UfyzPvXqK+Tf/xefn88ICwCrGVrf4MRS/RIE9jgN6jwGq4L6/ygAAdrW5UOnss5Kvg7/BEZ5SZRqHwoheAlTVXRLAV7lkt8I+rKQCrs/1HTwtWMrcnxRMhYAHpksE18xRNR8zRY6ziiaRr5N5YO/IufebUk6n+nbWFfXxITeiCMYmB48D02kNa/M71Xu4ITbaGfpBJsoi/crMFOxF9Zjj8vQCY/xJ/0DKqGlZf9b7/EI6JcSp1MqHmwYqvSY4z3n7ecruh8fuwy1JyhDU6iP/mY0O3EkoH01zDxBTWh9pRjXwOD+Q6hszgdcaP8xONuBWDbBG/xC8K+0aVSJAtnq6W5Xgr1lPV8qi+OaYTrFPgLk8CcuijJWuWHW9/bG72oAzFHd+Uih/HD2NIgo4AeziNjSryZD7nV6cnbJtXzWj/IKPbWOQEH3+PE//RbwjDE2r61+4wMUuGMZYqyVP30Tdh9qeIC8Zl3gbfsIr2CI9LkBza6MPeQOrGlSnl9asD0kRC7KHpMHcEvm3LSdtCOWQs5xe2CPyJLTljazYvVJfRQaQhKdyWXsj4Cmbi/u5wuiiKHxgzqKh5Kqn6UB3ZUPLST134lkVXcQNlydf1SdItRpQl0VnGWjIbv/eCWNDV62s/CkrEQFUGxRi8jd3t3SeFBT9uKc/JBHWUgtY85ZP2E8dpw4vsVOZouCThQZF2vuw2G1E7RXKxnki1ttM4Ke93FZtNggSuEQ2UkvOCs/bYGQ44xBJE9dvXunQ6gqDGakZhLq4n6UbO/FEpJ1A1HvK5xwctwfwISzAKpi1DQSxtfMZXBUC+8k2uVDzg0Xf5VcY9+ftsJ8/mfVa7SKEcJF71wTQ6hBm6owa/vtwjtfax/r9/FJPcRz4K7uoM7uFEeRrOOxOhmJdMOUQTGGjyA5PAZEd4Gh8afXf2mauhe8+8zowfKnj8u3V34aUPutD0+wumPu4JLoGpQbUzD6eeyRJWu+3rSJnX+A953139z8q/HmqM6lr1SJsfuZMfYjj1cLffIKWLVmMR264Dt8wV9+QTIZLvBVgkctfk5apIQpE61RBxuq47oQ9hFCDAYmk8sOXErWueCtlJbsZXHNUkxF2+Xe/h68ie5MY6xMbfMJja4cFsKqiaotfRlUSkXn6eCzTkB+57ui7sLVir/pQNZC+WlDDwn9IXWEQ4wd/kmtIVRLVJ+sZIBcjzGSEfPKluH3bPf8EgB7R9NqN25nPCX9quYvbnFKMbaZsqWqmnLpgusr7dvsynsMDavL+E6Q4VEhGZ8aFOIseJEeCuX3gHVPIE+9q6owt/nTtL+cVPKEE+74vJ2UGg6G8gK1Klb7OwowUZ2lnjX1usY/MRPp6/kYFlWn04/kMg0zQBOyxH8M61LRtcaDvmPwAt591ljV8sCivpKHmpomEh84hch6z1o4cjZZlWFzqfRV3gjkeqrsSQVzGgc2ZJB2GMWP1q/A8Y8btPCCDYz9HB2/yM+/pF1Xg7k+MoHdRpKwxU8LqJmsuUC5rFtKGbVgIv3o00/FLyTH5ULs3495+tZEFTqYlDGaFCLEaL+hEyMwze1ggioXOtODO6K341W76rwHvy7ZKvKW9p3Ti+ekL6CHwNT2nOEFqkPyF44YI/DIjCR4dXZrRpHacJ",
-  "data:image/webp;base64,UklGRqybAABXRUJQVlA4IKCbAAAwDASdASpqAkwEPnk6mUkkoysxIzKbEiAPCWdtfeFe/ba25del1iBF1nWnlhPrxwSl9BPsf+b19/QP9nyteX/3ndi6Ae/9oBeRR+580/7B/lunL/2PR6/Vv+f1Cv+nzGhvI/+ndP151WnDWZRc/f+/8cIP4d/5PPJ8e/x/+3w7/v91euTL4fxV8CPyT7GUjlxH7/Y4/7XoR+m/8Dzf/UfyzPvXqK+Tf/xefn88ICwCrGVrf4MRS/RIE9jgN6jwGq4L6/ygAAdrW5UOnss5Kvg7/BEZ5SZRqHwoheAlTVXRLAV7lkt8I+rKQCrs/1HTwtWMrcnxRMhYAHpksE18xRNR8zRY6ziiaRr5N5YO/IufebUk6n+nbWFfXxITeiCMYmB48D02kNa/M71Xu4ITbaGfpBJsoi/crMFOxF9Zjj8vQCY/xJ/0DKqGlZf9b7/EI6JcSp1MqHmwYqvSY4z3n7ecruh8fuwy1JyhDU6iP/mY0O3EkoH01zDxBTWh9pRjXwOD+Q6hszgdcaP8xONuBWDbBG/xC8K+0aVSJAtnq6W5Xgr1lPV8qi+OaYTrFPgLk8CcuijJWuWHW9/bG72oAzFHd+Uih/HD2NIgo4AeziNjSryZD7nV6cnbJtXzWj/IKPbWOQEH3+PE//RbwjDE2r61+4wMUuGMZYqyVP30Tdh9qeIC8Zl3gbfsIr2CI9LkBza6MPeQOrGlSnl9asD0kRC7KHpMHcEvm3LSdtCOWQs5xe2CPyJLTljazYvVJfRQaQhKdyWXsj4Cmbi/u5wuiiKHxgzqKh5Kqn6UB3ZUPLST134lkVXcQNlydf1SdItRpQl0VnGWjIbv/eCWNDV62s/CkrEQFUGxRi8jd3t3SeFBT9uKc/JBHWUgtY85ZP2E8dpw4vsVOZouCThQZF2vuw2G1E7RXKxnki1ttM4Ke93FZtNggSuEQ2UkvOCs/bYGQ44xBJE9dvXunQ6gqDGakZhLq4n6UbO/FEpJ1A1HvK5xwctwfwISzAKpi1DQSxtfMZXBUC+8k2uVDzg0Xf5VcY9+ftsJ8/mfVa7SKEcJF71wTQ6hBm6owa/vtwjtfax/r9/FJPcRz4K7uoM7uFEeRrOOxOhmJdMOUQTGGjyA5PAZEd4Gh8afXf2mauhe8+8zowfKnj8u3V34aUPutD0+wumPu4JLoGpQbUzD6eeyRJWu+3rSJnX+A953139z8q/HmqM6lr1SJsfuZMfYjj1cLffIKWLVmMR264Dt8wV9+QTIZLvBVgkctfk5apIQpE61RBxuq47oQ9hFCDAYmk8sOXErWueCtlJbsZXHNUkxF2+Xe/h68ie5MY6xMbfMJja4cFsKqiaotfRlUSkXn6eCzTkB+57ui7sLVir/pQNZC+WlDDwn9IXWEQ4wd/kmtIVRLVJ+sZIBcjzGSEfPKluH3bPf8EgB7R9NqN25nPCX9quYvbnFKMbaZsqWqmnLpgusr7dvsynsMDavL+E6Q4VEhGZ8aFOIseJEeCuX3gHVPIE+9q6owt/nTtL+cVPKEE+74vJ2UGg6G8gK1Klb7OwowUZ2lnjX1usY/MRPp6/kYFlWn04/kMg0zQBOyxH8M61LRtcaDvmPwAt591ljV8sCivpKHmpomEh84hch6z1o4cjZZlWFzqfRV3gjkeqrsSQVzGgc2ZJB2GMWP1q/A8Y8btPCCDYz9HB2/yM+/pF1Xg7k+MoHdRpKwxU8LqJmsuUC5rFtKGbVgIv3o00/FLyTH5ULs3495+tZEFTqYlDGaFCLEaL+hEyMwze1ggioXOtODO6K341W76rwHvy7ZKvKW9p3Ti+ekL6CHwNT2nOEFqkPyF44YI/DIjCR4dXZrRpHacJ",
-  "data:image/webp;base64,UklGRqybAABXRUJQVlA4IKCbAAAwDASdASpqAkwEPnk6mUkkoysxIzKbEiAPCWdtfeFe/ba25del1iBF1nWnlhPrxwSl9BPsf+b19/QP9nyteX/3ndi6Ae/9oBeRR+580/7B/lunL/2PR6/Vv+f1Cv+nzGhvI/+ndP151WnDWZRc/f+/8cIP4d/5PPJ8e/x/+3w7/v91euTL4fxV8CPyT7GUjlxH7/Y4/7XoR+m/8Dzf/UfyzPvXqK+Tf/xefn88ICwCrGVrf4MRS/RIE9jgN6jwGq4L6/ygAAdrW5UOnss5Kvg7/BEZ5SZRqHwoheAlTVXRLAV7lkt8I+rKQCrs/1HTwtWMrcnxRMhYAHpksE18xRNR8zRY6ziiaRr5N5YO/IufebUk6n+nbWFfXxITeiCMYmB48D02kNa/M71Xu4ITbaGfpBJsoi/crMFOxF9Zjj8vQCY/xJ/0DKqGlZf9b7/EI6JcSp1MqHmwYqvSY4z3n7ecruh8fuwy1JyhDU6iP/mY0O3EkoH01zDxBTWh9pRjXwOD+Q6hszgdcaP8xONuBWDbBG/xC8K+0aVSJAtnq6W5Xgr1lPV8qi+OaYTrFPgLk8CcuijJWuWHW9/bG72oAzFHd+Uih/HD2NIgo4AeziNjSryZD7nV6cnbJtXzWj/IKPbWOQEH3+PE//RbwjDE2r61+4wMUuGMZYqyVP30Tdh9qeIC8Zl3gbfsIr2CI9LkBza6MPeQOrGlSnl9asD0kRC7KHpMHcEvm3LSdtCOWQs5xe2CPyJLTljazYvVJfRQaQhKdyWXsj4Cmbi/u5wuiiKHxgzqKh5Kqn6UB3ZUPLST134lkVXcQNlydf1SdItRpQl0VnGWjIbv/eCWNDV62s/CkrEQFUGxRi8jd3t3SeFBT9uKc/JBHWUgtY85ZP2E8dpw4vsVOZouCThQZF2vuw2G1E7RXKxnki1ttM4Ke93FZtNggSuEQ2UkvOCs/bYGQ44xBJE9dvXunQ6gqDGakZhLq4n6UbO/FEpJ1A1HvK5xwctwfwISzAKpi1DQSxtfMZXBUC+8k2uVDzg0Xf5VcY9+ftsJ8/mfVa7SKEcJF71wTQ6hBm6owa/vtwjtfax/r9/FJPcRz4K7uoM7uFEeRrOOxOhmJdMOUQTGGjyA5PAZEd4Gh8afXf2mauhe8+8zowfKnj8u3V34aUPutD0+wumPu4JLoGpQbUzD6eeyRJWu+3rSJnX+A953139z8q/HmqM6lr1SJsfuZMfYjj1cLffIKWLVmMR264Dt8wV9+QTIZLvBVgkctfk5apIQpE61RBxuq47oQ9hFCDAYmk8sOXErWueCtlJbsZXHNUkxF2+Xe/h68ie5MY6xMbfMJja4cFsKqiaotfRlUSkXn6eCzTkB+57ui7sLVir/pQNZC+WlDDwn9IXWEQ4wd/kmtIVRLVJ+sZIBcjzGSEfPKluH3bPf8EgB7R9NqN25nPCX9quYvbnFKMbaZsqWqmnLpgusr7dvsynsMDavL+E6Q4VEhGZ8aFOIseJEeCuX3gHVPIE+9q6owt/nTtL+cVPKEE+74vJ2UGg6G8gK1Klb7OwowUZ2lnjX1usY/MRPp6/kYFlWn04/kMg0zQBOyxH8M61LRtcaDvmPwAt591ljV8sCivpKHmpomEh84hch6z1o4cjZZlWFzqfRV3gjkeqrsSQVzGgc2ZJB2GMWP1q/A8Y8btPCCDYz9HB2/yM+/pF1Xg7k+MoHdRpKwxU8LqJmsuUC5rFtKGbVgIv3o00/FLyTH5ULs3495+tZEFTqYlDGaFCLEaL+hEyMwze1ggioXOtODO6K341W76rwHvy7ZKvKW9p3Ti+ekL6CHwNT2nOEFqkPyF44YI/DIjCR4dXZrRpHacJ"
-];
+const SOURCE_URL = 'https://raw.githubusercontent.com/Arham43-ops/valentine-s-quest/50d6a0c7f6cd40f13de7c56e454020e9f9be7aaf/src/components/game/SummaryScreen.tsx';
+const FALLBACK_PHOTO = 'data:image/webp;base64,UklGRqybAABXRUJQVlA4IKCbAAAwDASdASpqAkwEPnk6mUkkoysxIzKbEiAPCWdtfeFe/ba25del1iBF1nWnlhPrxwSl9BPsf+b19/QP9nyteX/3ndi6Ae/9oBeRR+580/7B/lunL/2PR6/Vv+f1Cv+nzGhvI/+ndP151WnDWZRc/f+/8cIP4d/5PPJ8e/x/+3w7/v91euTL4fxV8CPyT7GUjlxH7/Y4/7XoR+m/8Dzf/UfyzPvXqK+Tf/xefn88ICwCrGVrf4MRS/RIE9jgN6jwGq4L6/ygAAdrW5UOnss5Kvg7/BEZ5SZRqHwoheAlTVXRLAV7lkt8I+rKQCrs/1HTwtWMrcnxRMhYAHpksE18xRNR8zRY6ziiaRr5N5YO/IufebUk6n+nbWFfXxITeiCMYmB48D02kNa/M71Xu4ITbaGfpBJsoi/crMFOxF9Zjj8vQCY/xJ/0DKqGlZf9b7/EI6JcSp1MqHmwYqvSY4z3n7ecruh8fuwy1JyhDU6iP/mY0O3EkoH01zDxBTWh9pRjXwOD+Q6hszgdcaP8xONuBWDbBG/xC8K+0aVSJAtnq6W5Xgr1lPV8qi+OaYTrFPgLk8CcuijJWuWHW9/bG72oAzFHd+Uih/HD2NIgo4AeziNjSryZD7nV6cnbJtXzWj/IKPbWOQEH3+PE//RbwjDE2r61+4wMUuGMZYqyVP30Tdh9qeIC8Zl3gbfsIr2CI9LkBza6MPeQOrGlSnl9asD0kRC7KHpMHcEvm3LSdtCOWQs5xe2CPyJLTljazYvVJfRQaQhKdyWXsj4Cmbi/u5wuiiKHxgzqKh5Kqn6UB3ZUPLST134lkVXcQNlydf1SdItRpQl0VnGWjIbv/eCWNDV62s/CkrEQFUGxRi8jd3t3SeFBT9uKc/JBHWUgtY85ZP2E8dpw4vsVOZouCThQZF2vuw2G1E7RXKxnki1ttM4Ke93FZtNggSuEQ2UkvOCs/bYGQ44xBJE9dvXunQ6gqDGakZhLq4n6UbO/FEpJ1A1HvK5xwctwfwISzAKpi1DQSxtfMZXBUC+8k2uVDzg0Xf5VcY9+ftsJ8/mfVa7SKEcJF71wTQ6hBm6owa/vtwjtfax/r9/FJPcRz4K7uoM7uFEeRrOOxOhmJdMOUQTGGjyA5PAZEd4Gh8afXf2mauhe8+8zowfKnj8u3V34aUPutD0+wumPu4JLoGpQbUzD6eeyRJWu+3rSJnX+A953139z8q/HmqM6lr1SJsfuZMfYjj1cLffIKWLVmMR264Dt8wV9+QTIZLvBVgkctfk5apIQpE61RBxuq47oQ9hFCDAYmk8sOXErWueCtlJbsZXHNUkxF2+Xe/h68ie5MY6xMbfMJja4cFsKqiaotfRlUSkXn6eCzTkB+57ui7sLVir/pQNZC+WlDDwn9IXWEQ4wd/kmtIVRLVJ+sZIBcjzGSEfPKluH3bPf8EgB7R9NqN25nPCX9quYvbnFKMbaZsqWqmnLpgusr7dvsynsMDavL+E6Q4VEhGZ8aFOIseJEeCuX3gHVPIE+9q6owt/nTtL+cVPKEE+74vJ2UGg6G8gK1Klb7OwowUZ2lnjX1usY/MRPp6/kYFlWn04/kMg0zQBOyxH8M61LRtcaDvmPwAt591ljV8sCivpKHmpomEh84hch6z1o4cjZZlWFzqfRV3gjkeqrsSQVzGgc2ZJB2GMWP1q/A8Y8btPCCDYz9HB2/yM+/pF1Xg7k+MoHdRpKwxU8LqJmsuUC5rFtKGbVgIv3o00/FLyTH5ULs3495+tZEFTqYlDGaFCLEaL+hEyMwze1ggioXOtODO6K341W76rwHvy7ZKvKW9p3Ti+ekL6CHwNT2nOEFqkPyF44YI/DIjCR4dXZrRpHacJ';
 
 export default function SummaryScreen({ onRestart }: Props) {
+  const [photos, setPhotos] = useState<string[]>([FALLBACK_PHOTO, FALLBACK_PHOTO, FALLBACK_PHOTO, FALLBACK_PHOTO]);
+
+  useEffect(() => {
+    let alive = true;
+    fetch(SOURCE_URL)
+      .then((r) => r.text())
+      .then((source) => {
+        const found = source.match(/data:image\/webp;base64,[A-Za-z0-9+/=]+/g) ?? [];
+        if (alive && found.length >= 4) setPhotos(found.slice(0, 4));
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
   const handleSendMessage = async () => {
     const text = `I just finished your little date quest. That was actually really cute. I think we should give this a chance and pick a day to go out. :)`;
     if (navigator.share) {
-      try {
-        await navigator.share({ title: 'A Little Note', text });
-      } catch {
-        // dismissed
-      }
+      try { await navigator.share({ title: 'A Little Note', text }); } catch {}
     } else {
-      try {
-        await navigator.clipboard.writeText(text);
-        alert('The message has been copied to your clipboard!');
-      } catch {
-        alert(text);
-      }
+      try { await navigator.clipboard.writeText(text); alert('The message has been copied to your clipboard!'); }
+      catch { alert(text); }
     }
   };
 
-  const photoCard =
-    'absolute rounded-[4px] border-[9px] border-white bg-white p-1 shadow-[0_16px_30px_rgba(80,30,20,0.24)]';
+  const photoCard = 'absolute rounded-[4px] border-[9px] border-white bg-white p-1 shadow-[0_16px_30px_rgba(80,30,20,0.24)]';
   const photoImage = 'block w-full bg-[#f8f2e9] object-contain';
 
   return (
@@ -46,22 +47,22 @@ export default function SummaryScreen({ onRestart }: Props) {
           <div className="absolute right-[9%] bottom-[9%] text-xl text-[#c06b67]/45 rotate-[-8deg]">✿</div>
 
           <figure className={`${photoCard} left-[1%] top-[3%] w-[120px] sm:left-[2.5%] sm:top-[4%] sm:w-[215px] md:w-[245px] lg:w-[270px] xl:w-[285px] -rotate-[5deg]`}>
-            <img src={PHOTOS[0]} alt="Memory" className={`${photoImage} aspect-[4/5]`} />
+            <img src={photos[0]} alt="Memory" className={`${photoImage} aspect-[4/5]`} />
             <figcaption className="px-1 pb-1 pt-2 text-center font-hand text-[14px] leading-tight text-[#a6534f] sm:text-[16px]">you, being you ♡</figcaption>
           </figure>
 
           <figure className={`${photoCard} right-[1%] top-[3.5%] w-[120px] sm:right-[2.5%] sm:top-[4.5%] sm:w-[215px] md:w-[245px] lg:w-[270px] xl:w-[285px] rotate-[5deg]`}>
-            <img src={PHOTOS[1]} alt="Memory" className={`${photoImage} aspect-[4/5]`} />
+            <img src={photos[1]} alt="Memory" className={`${photoImage} aspect-[4/5]`} />
             <figcaption className="px-1 pb-1 pt-2 text-center font-hand text-[14px] leading-tight text-[#a6534f] sm:text-[16px]">one of my favourites</figcaption>
           </figure>
 
           <figure className={`${photoCard} left-[1%] bottom-[3%] w-[135px] sm:left-[2.8%] sm:bottom-[4%] sm:w-[235px] md:w-[270px] lg:w-[300px] xl:w-[320px] rotate-[4deg]`}>
-            <img src={PHOTOS[2]} alt="Memory" className={`${photoImage} aspect-[4/3]`} />
+            <img src={photos[2]} alt="Memory" className={`${photoImage} aspect-[4/3]`} />
             <figcaption className="px-1 pb-1 pt-2 text-center font-hand text-[14px] leading-tight text-[#a6534f] sm:text-[16px]">this one made me smile</figcaption>
           </figure>
 
           <figure className={`${photoCard} right-[1%] bottom-[3%] w-[120px] sm:right-[2.8%] sm:bottom-[4%] sm:w-[210px] md:w-[235px] lg:w-[255px] xl:w-[270px] -rotate-[4deg]`}>
-            <div className="flex aspect-[4/5] w-full items-center justify-center overflow-hidden bg-[#f8f2e9]"><img src={PHOTOS[3]} alt="Memory" className="block h-[132%] w-[132%] max-w-none rotate-90 object-contain" /></div>
+            <div className="flex aspect-[4/5] w-full items-center justify-center overflow-hidden bg-[#f8f2e9]"><img src={photos[3]} alt="Memory" className="block h-[132%] w-[132%] max-w-none rotate-90 object-contain" /></div>
             <figcaption className="px-1 pb-1 pt-2 text-center font-hand text-[14px] leading-tight text-[#a6534f] sm:text-[16px]">a little memory ♡</figcaption>
           </figure>
 
