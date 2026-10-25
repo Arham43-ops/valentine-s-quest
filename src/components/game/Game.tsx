@@ -59,8 +59,8 @@ function getQuestionPlatforms(H: number): Platform[] {
 
 function getAnswerPlatforms(H: number, W: number): Platform[] {
   const centerX = W / 2;
-  const noX = Math.max(20, centerX - 300);
-  const yesX = Math.min(W - 160, centerX + 160);
+  const noX = Math.max(30, centerX - 340);
+  const yesX = Math.min(W - 170, centerX + 170);
   const platformY = H - 180;
   const lowerY = H - 120;
 
@@ -248,7 +248,50 @@ export default function Game() {
         }
         p.onGround = p.y >= groundY;
 
+        // Stage 2: make the NO platform escape BEFORE collision detection.
+        // It is intentionally not collidable, so the player can never stand on/touch it.
+        if (currentStage === 'stage2' && noPlatRef.current) {
+          const no = noPlatRef.current;
+          const playerCenterX = p.x + p.w / 2;
+          const playerCenterY = p.y + p.h / 2;
+          const noCenterX = no.x + no.w / 2;
+          const noCenterY = no.y + no.h / 2;
+          const dx = noCenterX - playerCenterX;
+          const dy = noCenterY - playerCenterY;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < 270) {
+            audioManager.playNoRunAway();
+
+            // Pick a new position that is significantly farther from the player.
+            // Prefer the side opposite the player's current position and keep it visible.
+            const directionX = dx >= 0 ? 1 : -1;
+            const directionY = dy >= 0 ? 1 : -1;
+            const escapeX = no.x + directionX * (220 + Math.random() * 120);
+            const escapeY = no.y + directionY * (70 + Math.random() * 100);
+
+            no.x = Math.max(20, Math.min(W - no.w - 20, escapeX));
+            no.y = Math.max(130, Math.min(H - 230, escapeY));
+
+            // If the edge stopped the horizontal escape, give it a second safe jump.
+            const newDist = Math.hypot(
+              (no.x + no.w / 2) - playerCenterX,
+              (no.y + no.h / 2) - playerCenterY
+            );
+            if (newDist < 220) {
+              const sideX = playerCenterX < W / 2
+                ? W * 0.68 + Math.random() * W * 0.18
+                : W * 0.08 + Math.random() * W * 0.18;
+              no.x = Math.max(20, Math.min(W - no.w - 20, sideX));
+              no.y = Math.max(130, Math.min(H - 230, 150 + Math.random() * Math.max(80, H - 380)));
+            }
+          }
+        }
+
         for (const pl of platformsRef.current) {
+          // NO is a visual target only. It must never become a solid platform.
+          if (currentStage === 'stage2' && pl.type === 'no') continue;
+
           if (p.x + p.w > pl.x && p.x < pl.x + pl.w && p.y + p.h >= pl.y && p.y + p.h <= pl.y + pl.h + 8 && p.vy >= 0) {
             p.y = pl.y - p.h; p.vy = 0; p.onGround = true; p.jumps = 0;
 
@@ -274,25 +317,6 @@ export default function Game() {
               setCelebration(true);
               setTimeout(() => setStage('summary'), 2000);
             }
-          }
-        }
-
-        if (currentStage === 'stage2' && noPlatRef.current) {
-          const no = noPlatRef.current;
-          const playerCenterX = p.x + p.w / 2;
-          const playerCenterY = p.y + p.h / 2;
-          const noCenterX = no.x + no.w / 2;
-          const noCenterY = no.y + no.h / 2;
-          const dx = noCenterX - playerCenterX;
-          const dy = noCenterY - playerCenterY;
-          const dist = Math.hypot(dx, dy);
-
-          if (dist < 190) {
-            audioManager.playNoRunAway();
-            const moveX = dx === 0 ? (noCenterX >= W / 2 ? 1 : -1) : Math.sign(dx);
-            const moveY = Math.sign(dy) * 45;
-            no.x = Math.max(20, Math.min(W - no.w - 20, no.x + moveX * (180 + Math.random() * 80)));
-            no.y = Math.max(150, Math.min(H - 230, no.y + moveY));
           }
         }
       }
