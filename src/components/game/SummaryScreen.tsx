@@ -1,91 +1,81 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-interface Props {
-  onRestart: () => void;
-}
+interface Props { onRestart: () => void; }
 
-const SOURCE_URL = 'https://raw.githubusercontent.com/Arham43-ops/valentine-s-quest/50d6a0c7f6cd40f13de7c56e454020e9f9be7aaf/src/components/game/SummaryScreen.tsx';
-const FALLBACK_PHOTO = 'data:image/webp;base64,UklGRqybAABXRUJQVlA4IKCbAAAwDASdASpqAkwEPnk6mUkkoysxIzKbEiAPCWdtfeFe/ba25del1iBF1nWnlhPrxwSl9BPsf+b19/QP9nyteX/3ndi6Ae/9oBeRR+580/7B/lunL/2PR6/Vv+f1Cv+nzGhvI/+ndP151WnDWZRc/f+/8cIP4d/5PPJ8e/x/+3w7/v91euTL4fxV8CPyT7GUjlxH7/Y4/7XoR+m/8Dzf/UfyzPvXqK+Tf/xefn88ICwCrGVrf4MRS/RIE9jgN6jwGq4L6/ygAAdrW5UOnss5Kvg7/BEZ5SZRqHwoheAlTVXRLAV7lkt8I+rKQCrs/1HTwtWMrcnxRMhYAHpksE18xRNR8zRY6ziiaRr5N5YO/IufebUk6n+nbWFfXxITeiCMYmB48D02kNa/M71Xu4ITbaGfpBJsoi/crMFOxF9Zjj8vQCY/xJ/0DKqGlZf9b7/EI6JcSp1MqHmwYqvSY4z3n7ecruh8fuwy1JyhDU6iP/mY0O3EkoH01zDxBTWh9pRjXwOD+Q6hszgdcaP8xONuBWDbBG/xC8K+0aVSJAtnq6W5Xgr1lPV8qi+OaYTrFPgLk8CcuijJWuWHW9/bG72oAzFHd+Uih/HD2NIgo4AeziNjSryZD7nV6cnbJtXzWj/IKPbWOQEH3+PE//RbwjDE2r61+4wMUuGMZYqyVP30Tdh9qeIC8Zl3gbfsIr2CI9LkBza6MPeQOrGlSnl9asD0kRC7KHpMHcEvm3LSdtCOWQs5xe2CPyJLTljazYvVJfRQaQhKdyWXsj4Cmbi/u5wuiiKHxgzqKh5Kqn6UB3ZUPLST134lkVXcQNlydf1SdItRpQl0VnGWjIbv/eCWNDV62s/CkrEQFUGxRi8jd3t3SeFBT9uKc/JBHWUgtY85ZP2E8dpw4vsVOZouCThQZF2vuw2G1E7RXKxnki1ttM4Ke93FZtNggSuEQ2UkvOCs/bYGQ44xBJE9dvXunQ6gqDGakZhLq4n6UbO/FEpJ1A1HvK5xwctwfwISzAKpi1DQSxtfMZXBUC+8k2uVDzg0Xf5VcY9+ftsJ8/mfVa7SKEcJF71wTQ6hBm6owa/vtwjtfax/r9/FJPcRz4K7uoM7uFEeRrOOxOhmJdMOUQTGGjyA5PAZEd4Gh8afXf2mauhe8+8zowfKnj8u3V34aUPutD0+wumPu4JLoGpQbUzD6eeyRJWu+3rSJnX+A953139z8q/HmqM6lr1SJsfuZMfYjj1cLffIKWLVmMR264Dt8wV9+QTIZLvBVgkctfk5apIQpE61RBxuq47oQ9hFCDAYmk8sOXErWueCtlJbsZXHNUkxF2+Xe/h68ie5MY6xMbfMJja4cFsKqiaotfRlUSkXn6eCzTkB+57ui7sLVir/pQNZC+WlDDwn9IXWEQ4wd/kmtIVRLVJ+sZIBcjzGSEfPKluH3bPf8EgB7R9NqN25nPCX9quYvbnFKMbaZsqWqmnLpgusr7dvsynsMDavL+E6Q4VEhGZ8aFOIseJEeCuX3gHVPIE+9q6owt/nTtL+cVPKEE+74vJ2UGg6G8gK1Klb7OwowUZ2lnjX1usY/MRPp6/kYFlWn04/kMg0zQBOyxH8M61LRtcaDvmPwAt591ljV8sCivpKHmpomEh84hch6z1o4cjZZlWFzqfRV3gjkeqrsSQVzGgc2ZJB2GMWP1q/A8Y8btPCCDYz9HB2/yM+/pF1Xg7k+MoHdRpKwxU8LqJmsuUC5rFtKGbVgIv3o00/FLyTH5ULs3495+tZEFTqYlDGaFCLEaL+hEyMwze1ggioXOtODO6K341W76rwHvy7ZKvKW9p3Ti+ekL6CHwNT2nOEFqkPyF44YI/DIjCR4dXZrRpHacJ';
+const PHOTO_A = `data:image/webp;base64,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`;
+
+const PHOTO_B = `data:image/webp;base64,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`;
 
 export default function SummaryScreen({ onRestart }: Props) {
-  const [photos, setPhotos] = useState<string[]>([FALLBACK_PHOTO, FALLBACK_PHOTO, FALLBACK_PHOTO, FALLBACK_PHOTO]);
-
-  useEffect(() => {
-    let alive = true;
-    fetch(SOURCE_URL)
-      .then((r) => r.text())
-      .then((source) => {
-        const found = source.match(/data:image\/webp;base64,[A-Za-z0-9+/=]+/g) ?? [];
-        if (alive && found.length >= 4) setPhotos(found.slice(0, 4));
-      })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, []);
-
   const handleSendMessage = async () => {
     const text = `I just finished your little date quest. That was actually really cute. I think we should give this a chance and pick a day to go out. :)`;
     if (navigator.share) {
-      try { await navigator.share({ title: 'A Little Note', text }); } catch {}
+      try { await navigator.share({ title: 'A Little Note', text }); } catch { /* dismissed */ }
     } else {
-      try { await navigator.clipboard.writeText(text); alert('The message has been copied to your clipboard!'); }
-      catch { alert(text); }
+      try {
+        await navigator.clipboard.writeText(text);
+        alert('The message has been copied to your clipboard!');
+      } catch {
+        alert(text);
+      }
     }
   };
 
-  const photoCard = 'absolute rounded-[4px] border-[9px] border-white bg-white p-1 shadow-[0_16px_30px_rgba(80,30,20,0.24)]';
-  const photoImage = 'block w-full bg-[#f8f2e9] object-contain';
+  const photoFrame = 'absolute overflow-hidden rounded-[6px] border-[9px] border-white bg-white shadow-[0_14px_30px_rgba(80,30,20,0.25)]';
+  const caption = 'absolute font-[\'Segoe_Print\'] text-[10px] leading-tight text-[#925650] md:text-xs';
 
   return (
-    <div className="min-h-[100dvh] w-full overflow-hidden bg-[#f6c4c8] px-2 py-3 sm:px-4 sm:py-4 flex flex-col items-center justify-center">
-      <div className="relative w-full max-w-[1450px] h-[min(88dvh,820px)] min-h-[640px]">
-        <div className="absolute inset-0 translate-x-2 translate-y-3 rounded-[10px] bg-[#d99b92]/30" />
-        <main className="relative h-full overflow-hidden rounded-[10px] border border-[#8f302d] bg-[#fffdf5] shadow-[0_16px_34px_rgba(92,35,30,0.18)]" style={{ backgroundImage: 'linear-gradient(rgba(180,120,110,.09) 1px, transparent 1px), linear-gradient(90deg, rgba(180,120,110,.09) 1px, transparent 1px)', backgroundSize: '28px 28px' }}>
-          <div className="absolute inset-y-0 left-0 w-[18px] border-r border-[#dca39b]/40 bg-[#f0b6ae]/45" />
-          <div className="absolute left-[8%] top-[8%] text-2xl text-[#c06b67]/55 rotate-[-10deg]">✦</div>
-          <div className="absolute right-[8%] top-[10%] text-2xl text-[#c06b67]/55 rotate-[8deg]">♡</div>
-          <div className="absolute left-[9%] bottom-[10%] text-xl text-[#c06b67]/45 rotate-[8deg]">☁︎</div>
-          <div className="absolute right-[9%] bottom-[9%] text-xl text-[#c06b67]/45 rotate-[-8deg]">✿</div>
+    <div className="min-h-[100dvh] w-full overflow-hidden bg-[#f6c3c7] px-3 py-3 md:px-6 md:py-4 flex flex-col items-center justify-center">
+      <div className="relative w-full max-w-[1280px] h-[calc(100dvh-105px)] max-h-[780px] min-h-[560px]">
+        <div className="absolute inset-0 translate-x-3 translate-y-4 rounded-[12px] bg-[#d79691]/35" />
 
-          <figure className={`${photoCard} left-[1%] top-[3%] w-[120px] sm:left-[2.5%] sm:top-[4%] sm:w-[215px] md:w-[245px] lg:w-[270px] xl:w-[285px] -rotate-[5deg]`}>
-            <img src={photos[0]} alt="Memory" className={`${photoImage} aspect-[4/5]`} />
-            <figcaption className="px-1 pb-1 pt-2 text-center font-hand text-[14px] leading-tight text-[#a6534f] sm:text-[16px]">you, being you ♡</figcaption>
-          </figure>
+        <main
+          className="relative h-full overflow-hidden rounded-[10px] border border-[#963e3a] bg-[#fffdf6] shadow-[0_18px_42px_rgba(92,35,30,0.20)]"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(180,120,110,.085) 1px, transparent 1px), linear-gradient(90deg, rgba(180,120,110,.085) 1px, transparent 1px)',
+            backgroundSize: '30px 30px',
+          }}
+        >
+          <div className="absolute inset-y-0 left-0 w-[18px] border-r border-[#dca39b]/45 bg-[#f0b6ae]/45" />
+          <div className="absolute left-[5%] top-[5%] rotate-[-8deg] text-2xl text-[#c06b67]/65">✦</div>
+          <div className="absolute right-[5%] top-[5%] rotate-[8deg] text-2xl text-[#c06b67]/65">♡</div>
+          <div className="absolute left-[5%] bottom-[6%] rotate-[10deg] text-xl text-[#c06b67]/55">☁︎</div>
+          <div className="absolute right-[5%] bottom-[6%] rotate-[-8deg] text-xl text-[#c06b67]/55">✿</div>
 
-          <figure className={`${photoCard} right-[1%] top-[3.5%] w-[120px] sm:right-[2.5%] sm:top-[4.5%] sm:w-[215px] md:w-[245px] lg:w-[270px] xl:w-[285px] rotate-[5deg]`}>
-            <img src={photos[1]} alt="Memory" className={`${photoImage} aspect-[4/5]`} />
-            <figcaption className="px-1 pb-1 pt-2 text-center font-hand text-[14px] leading-tight text-[#a6534f] sm:text-[16px]">one of my favourites</figcaption>
-          </figure>
+          <img src={PHOTO_A} alt="memory" className={`${photoFrame} left-[3%] top-[6%] h-[235px] w-[195px] -rotate-[6deg] object-cover object-center md:h-[300px] md:w-[245px]`} />
+          <img src={PHOTO_B} alt="memory" className={`${photoFrame} right-[3%] top-[6%] h-[245px] w-[190px] rotate-[6deg] object-cover object-center md:h-[315px] md:w-[235px]`} />
+          <img src={PHOTO_B} alt="memory" className={`${photoFrame} left-[3.5%] bottom-[5%] h-[220px] w-[195px] rotate-[5deg] object-cover object-[center_58%] md:h-[275px] md:w-[245px]`} />
+          <img src={PHOTO_A} alt="memory" className={`${photoFrame} right-[3.5%] bottom-[5%] h-[225px] w-[190px] -rotate-[5deg] object-cover object-[center_42%] md:h-[285px] md:w-[235px]`} />
 
-          <figure className={`${photoCard} left-[1%] bottom-[3%] w-[135px] sm:left-[2.8%] sm:bottom-[4%] sm:w-[235px] md:w-[270px] lg:w-[300px] xl:w-[320px] rotate-[4deg]`}>
-            <img src={photos[2]} alt="Memory" className={`${photoImage} aspect-[4/3]`} />
-            <figcaption className="px-1 pb-1 pt-2 text-center font-hand text-[14px] leading-tight text-[#a6534f] sm:text-[16px]">this one made me smile</figcaption>
-          </figure>
+          <div className={`${caption} left-[4%] top-[43%] rotate-[-5deg]`}>you, being you ♡</div>
+          <div className={`${caption} right-[4%] top-[43%] rotate-[4deg]`}>one of my favourites</div>
+          <div className={`${caption} left-[5%] bottom-[2.2%] rotate-[3deg]`}>this one made me smile</div>
+          <div className={`${caption} right-[5%] bottom-[2.2%] rotate-[-3deg]`}>a little memory ♡</div>
 
-          <figure className={`${photoCard} right-[1%] bottom-[3%] w-[120px] sm:right-[2.8%] sm:bottom-[4%] sm:w-[210px] md:w-[235px] lg:w-[255px] xl:w-[270px] -rotate-[4deg]`}>
-            <div className="flex aspect-[4/5] w-full items-center justify-center overflow-hidden bg-[#f8f2e9]"><img src={photos[3]} alt="Memory" className="block h-[132%] w-[132%] max-w-none rotate-90 object-contain" /></div>
-            <figcaption className="px-1 pb-1 pt-2 text-center font-hand text-[14px] leading-tight text-[#a6534f] sm:text-[16px]">a little memory ♡</figcaption>
-          </figure>
+          <section className="absolute left-1/2 top-[6%] flex h-[88%] w-[46%] -translate-x-1/2 flex-col items-center text-center text-[#7e3938] md:w-[44%]">
+            <p className="font-[\'Segoe_Print\'] text-[9px] tracking-[0.25em] text-[#b76861] md:text-[11px]">A LITTLE NOTE, FOR YOU</p>
+            <h1 className="mt-2 font-[\'Segoe_Print\'] text-[27px] font-semibold leading-[1.05] text-[#ad2d48] md:text-[43px]">
+              I wanted to tell you something...
+            </h1>
+            <div className="my-4 h-px w-20 bg-[#c87d76]/60 md:my-5" />
 
-          <section className="absolute inset-x-[22%] top-[5%] bottom-[6%] sm:inset-x-[23%] flex flex-col items-center justify-center text-center">
-            <p className="font-hand text-[12px] tracking-[0.32em] text-[#b7655e] sm:text-[14px]">A LITTLE NOTE, FOR YOU</p>
-            <h1 className="mt-2 font-hand text-[36px] font-bold leading-[1.05] text-[#9e2739] sm:text-[44px] md:text-[54px] lg:text-[62px]">I wanted to tell you something...</h1>
-            <div className="my-3 h-px w-20 bg-[#dca39b]" />
-            <div className="max-w-[680px] font-hand text-[16px] leading-[1.3] text-[#7b4540] sm:text-[18px] md:text-[20px]">
-              <p>Some people enter your life without any plans,<br className="hidden sm:block" />and somehow become a part of your thoughts.</p>
-              <p className="mt-3">Maybe it's the conversations, the little moments,<br className="hidden sm:block" />or simply the way you start looking forward to hearing from them.</p>
-              <p className="mt-3">I never really knew what this was supposed to become.<br className="hidden sm:block" />I just know that somewhere along the way,<br className="hidden sm:block" />I started hoping there might be a little more to it.</p>
-              <p className="mt-4 font-semibold text-[#9e2739]">So maybe this isn't really a question.<br />Maybe it's just a small hint...</p>
-              <p className="mt-4">What if we stopped wondering where this could go<br className="hidden sm:block" />and gave it a chance to find out?</p>
+            <div className="flex w-full flex-1 flex-col justify-center px-1 font-[\'Segoe_Print\'] text-[12px] leading-[1.55] md:px-3 md:text-[15px] md:leading-[1.6]">
+              <p>Some people enter your life without any plans,<br />and somehow become a part of your thoughts.</p>
+              <p className="mt-3">Maybe it&apos;s the conversations, the little moments,<br />or simply the way you start looking forward to hearing from them.</p>
+              <p className="mt-3">I never really knew what this was supposed to become.<br />I just know that somewhere along the way,<br />I started hoping there might be a little more to it.</p>
+              <p className="mt-4 font-semibold text-[#a13b43]">So maybe this isn&apos;t really a question.<br />Maybe it&apos;s just a small hint...</p>
+              <p className="mt-4 text-[13px] md:text-[16px]">What if we stopped wondering where this could go<br />and gave it a chance to find out?</p>
+              <p className="mt-5 text-[12px] md:text-[15px]">— from someone who&apos;d like to find out with you ♡</p>
             </div>
-            <div className="mt-5 font-hand text-[17px] font-semibold text-[#9e2739] sm:text-[20px]">— from someone who'd like to find out with you ♡</div>
-            <p className="mt-2 font-hand text-[12px] tracking-[0.12em] text-[#b7655e]/80 sm:text-[14px]">keep this page somewhere safe</p>
+
+            <p className="mb-1 font-[\'Segoe_Print\'] text-[8px] tracking-[0.18em] text-[#b87970] md:text-[10px]">keep this page somewhere safe</p>
           </section>
         </main>
       </div>
 
-      <div className="mt-3 flex w-full max-w-[860px] gap-3 px-1 sm:mt-4 sm:gap-5">
-        <button onClick={onRestart} className="flex h-[46px] flex-1 items-center justify-center gap-2 rounded-[3px] border-b-4 border-r-4 border-[#8f0008] bg-[#ff6476] px-3 font-pixel text-[11px] text-white shadow-[0_5px_10px_rgba(120,20,20,0.18)] transition hover:brightness-105 active:translate-y-1 active:border-b-2 sm:h-[50px] sm:text-sm">↻ <span>PLAY AGAIN</span></button>
-        <button onClick={handleSendMessage} className="flex h-[46px] flex-1 items-center justify-center gap-2 rounded-[3px] border-b-4 border-r-4 border-[#8f0008] bg-[#ff6476] px-3 font-pixel text-[11px] text-white shadow-[0_5px_10px_rgba(120,20,20,0.18)] transition hover:brightness-105 active:translate-y-1 active:border-b-2 sm:h-[50px] sm:text-sm">♡ <span>SEND MESSAGE</span></button>
+      <div className="mt-2 flex w-full max-w-[760px] gap-3 md:mt-3 md:gap-4">
+        <button onClick={onRestart} className="flex-1 rounded-[5px] border-b-4 border-r-4 border-[#8b0000] bg-[#ff6b81] py-2.5 px-3 font-pixel text-[9px] text-white shadow-lg transition-all hover:bg-[#ff4f69] active:translate-x-1 active:translate-y-1 active:border-b-0 active:border-r-0 md:py-3 md:text-xs">↻ PLAY AGAIN</button>
+        <button onClick={handleSendMessage} className="flex-1 rounded-[5px] border-b-4 border-r-4 border-[#8b0000] bg-[#ff6b81] py-2.5 px-3 font-pixel text-[9px] text-white shadow-lg transition-all hover:bg-[#ff4f69] active:translate-x-1 active:translate-y-1 active:border-b-0 active:border-r-0 md:py-3 md:text-xs">♡ SEND MESSAGE</button>
       </div>
     </div>
   );
