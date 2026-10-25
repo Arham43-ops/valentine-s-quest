@@ -90,6 +90,7 @@ export default function Game() {
   const [currentQ, setCurrentQ] = useState(0);
   const [celebration, setCelebration] = useState(false);
   const [activeQuestion, setActiveQuestion] = useState<number | null>(null);
+  const [replayMode, setReplayMode] = useState(false);
 
   const keysRef = useRef<Set<string>>(new Set());
   const playerRef = useRef<Player>({ x: 60, y: 300, w: PLAYER_W, h: PLAYER_H, vx: 0, vy: 0, onGround: false, facing: 1, jumps: 0 });
@@ -107,6 +108,7 @@ export default function Game() {
   const touchRef = useRef({ left: false, right: false, jump: false });
   const answeredQsRef = useRef<Set<number>>(new Set());
   const gamePausedRef = useRef(false);
+  const finalTransitionRef = useRef(false);
 
   useEffect(() => { stageRef.current = stage; }, [stage]);
   useEffect(() => { answersRef.current = answers; }, [answers]);
@@ -128,6 +130,7 @@ export default function Game() {
     particlesRef.current = [];
     answeredQsRef.current = new Set();
     gamePausedRef.current = false;
+    finalTransitionRef.current = false;
     setActiveQuestion(null);
 
     if (s === 'stage3') {
@@ -226,7 +229,7 @@ export default function Game() {
       const touch = touchRef.current;
       const currentStage = stageRef.current;
 
-      if (currentStage === 'loading' || currentStage === 'summary') return;
+      if (currentStage === 'loading' || currentStage === 'summary' || currentStage === 'transition') return;
 
       if (!gamePausedRef.current) {
         const left = keys.has('arrowleft') || keys.has('a') || touch.left;
@@ -323,11 +326,15 @@ export default function Game() {
               setTimeout(() => { setCelebration(false); initStage('stage4'); }, 1500);
             }
 
-            if (currentStage === 'stage4' && pl.type === 'letter') {
+            if (currentStage === 'stage4' && pl.type === 'letter' && !finalTransitionRef.current) {
+              finalTransitionRef.current = true;
               audioManager.playRomanticFinale();
               particlesRef.current.push(...spawnParticles(pl.x + pl.w / 2, pl.y, 100));
               setCelebration(true);
-              setTimeout(() => setStage('summary'), 2000);
+              setTimeout(() => {
+                setCelebration(false);
+                setStage('transition');
+              }, 1500);
             }
           }
         }
@@ -410,12 +417,42 @@ export default function Game() {
   const handleMute = () => { audioManager.init(); setMuted(audioManager.toggleMute()); };
 
   const handleRestart = () => {
+    setReplayMode(true);
     setAnswers([]); answersRef.current = []; setCurrentQ(0); currentQRef.current = 0;
     setActiveQuestion(null); activeQuestionRef.current = null; setCelebration(false); celebrationRef.current = false;
-    frameRef.current = 0; initStage('stage3');
+    frameRef.current = 0; finalTransitionRef.current = false; initStage('stage3');
   };
 
   if (stage === 'summary') return <SummaryScreen onRestart={handleRestart} />;
+
+  if (stage === 'transition') {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-[#f7c4c9] px-5 py-8 select-none">
+        <div className="relative w-full max-w-2xl overflow-hidden rounded-[24px] border-4 border-valentine-red bg-[#fffdf5] px-7 py-12 text-center shadow-[10px_12px_0_rgba(130,48,61,0.12)] md:px-14 md:py-16">
+          <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(175,102,102,0.11)_1px,transparent_1px),linear-gradient(90deg,rgba(175,102,102,0.11)_1px,transparent_1px)] [background-size:27px_27px]" />
+          <div className="relative z-10">
+            <p className="font-pixel text-[9px] uppercase tracking-[0.24em] text-valentine-red/70 md:text-[11px]">
+              {replayMode ? 'you came back for another round' : 'quest complete'}
+            </p>
+            <h1 className="mt-5 font-hand text-4xl font-bold leading-tight text-[#a5233d] md:text-6xl">
+              {replayMode ? 'Okay... one last thing.' : 'And now... one last thing.'}
+            </h1>
+            <p className="mx-auto mt-6 max-w-lg font-hand text-lg leading-relaxed text-[#7f3c49] md:text-xl">
+              You made it all the way here.
+              <br />
+              There&apos;s one final page I wanted you to see.
+            </p>
+            <button
+              onClick={() => setStage('summary')}
+              className="mt-9 rounded-sm border-r-4 border-b-4 border-[#970f22] bg-[#ff6578] px-7 py-4 font-pixel text-xs text-white shadow-[0_5px_0_rgba(110,24,35,0.12)] transition-transform hover:-translate-y-0.5 active:translate-y-0.5 md:px-10 md:text-sm"
+            >
+              OPEN THE LAST PAGE →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background relative select-none w-full h-screen overflow-hidden">
