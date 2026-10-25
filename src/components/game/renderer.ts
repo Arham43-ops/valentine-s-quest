@@ -54,23 +54,24 @@ export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, frame: numb
 
 export function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform) {
   const col = p.color || '#FF69B4';
+  const renderY = p.type === 'no' ? ctx.canvas.height - 180 : p.y;
   ctx.fillStyle = col;
-  ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.fillRect(p.x, renderY, p.w, p.h);
   ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.fillRect(p.x, p.y, p.w, 4);
+  ctx.fillRect(p.x, renderY, p.w, 4);
   ctx.fillStyle = 'rgba(0,0,0,0.15)';
-  ctx.fillRect(p.x, p.y + p.h - 4, p.w, 4);
+  ctx.fillRect(p.x, renderY + p.h - 4, p.w, 4);
   if (p.w > 40) {
     const hearts = Math.floor(p.w / 40);
     for (let i = 0; i < hearts; i++) {
-      drawPixelHeart(ctx, p.x + 20 + i * 40, p.y + p.h / 2, 12, 'rgba(255,255,255,0.25)');
+      drawPixelHeart(ctx, p.x + 20 + i * 40, renderY + p.h / 2, 12, 'rgba(255,255,255,0.25)');
     }
   }
   if (p.label) {
     ctx.fillStyle = '#fff';
     ctx.font = '10px "Press Start 2P", cursive';
     ctx.textAlign = 'center';
-    ctx.fillText(p.label, p.x + p.w / 2, p.y + p.h / 2 + 4);
+    ctx.fillText(p.label, p.x + p.w / 2, renderY + p.h / 2 + 4);
     ctx.textAlign = 'left';
   }
 }
