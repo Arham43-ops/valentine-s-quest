@@ -5,10 +5,10 @@ interface Props {
 }
 
 const MEMORIES = [
-  { src: '/memories/memory-01.jpg', caption: 'you, being you ♡', className: 'rotate-[-4deg] md:rotate-[-5deg]' },
-  { src: '/memories/memory-02.jpg', caption: 'one of my favourites', className: 'rotate-[3deg] md:rotate-[4deg]' },
-  { src: '/memories/memory-03.jpg', caption: 'this one made me smile', className: 'rotate-[2deg] md:rotate-[3deg]' },
-  { src: '/memories/memory-04.jpg', caption: 'a little memory ♡', className: 'rotate-[-3deg] md:rotate-[-4deg]' },
+  { src: '/memories/memory-01.jpg', caption: 'you, being you ♡', className: 'rotate-[-4deg]' },
+  { src: '/memories/memory-02.jpg', caption: 'one of my favourites', className: 'rotate-[3deg]' },
+  { src: '/memories/memory-03.jpeg', caption: 'this one made me smile', className: 'rotate-[3deg]' },
+  { src: '/memories/memory-04.jpeg', caption: 'a little memory ♡', className: 'rotate-[-3deg]' },
 ];
 
 export default function SummaryScreen({ onRestart }: Props) {
@@ -42,40 +42,37 @@ export default function SummaryScreen({ onRestart }: Props) {
 
           {/* Heading */}
           <div className="relative z-10 px-5 pt-5 text-center md:px-10 md:pt-6">
-            <p className="font-hand text-[11px] uppercase tracking-[0.28em] text-[#a43b4d] md:text-sm">
+            <p className="font-hand text-[10px] uppercase tracking-[0.28em] text-[#a43b4d] md:text-xs">
               a little note, for you
             </p>
-            <h1 className="mt-1 font-hand text-[clamp(2.5rem,5vw,4.8rem)] font-bold leading-[0.92] text-[#a5233d]">
+            <h1 className="mx-auto mt-1 max-w-[1000px] font-hand text-[clamp(2rem,4.2vw,4rem)] font-bold leading-[0.94] text-[#a5233d]">
               I wanted to tell you something...
             </h1>
-            <div className="mx-auto mt-3 h-px w-24 bg-[#b64a58]/50" />
+            <div className="mx-auto mt-2 h-px w-20 bg-[#b64a58]/50" />
           </div>
 
           {/* Memory photos */}
           <div className="pointer-events-none absolute inset-0 z-20">
             {MEMORIES.map((photo, index) => {
               const positions = [
-                'left-[2.5%] top-[12%] md:left-[2.8%] md:top-[10%]',
-                'right-[2.5%] top-[12%] md:right-[2.8%] md:top-[10%]',
-                'left-[3%] bottom-[7%] md:left-[3.2%] md:bottom-[7%]',
-                'right-[3%] bottom-[7%] md:right-[3.2%] md:bottom-[7%]',
+                'left-[3.5%] top-[17%]',
+                'right-[3.5%] top-[17%]',
+                'left-[3.5%] bottom-[9%]',
+                'right-[3.5%] bottom-[9%]',
               ];
 
               return (
                 <figure
                   key={photo.src}
-                  className={`absolute ${positions[index]} w-[25vw] max-w-[285px] min-w-[130px] md:w-[18vw] lg:w-[17vw] ${photo.className}`}
+                  className={`absolute ${positions[index]} w-[17vw] max-w-[270px] min-w-[190px] ${photo.className}`}
                 >
-                  <div className="rounded-[4px] bg-white p-2.5 pb-9 shadow-[0_10px_24px_rgba(70,30,35,0.18)] md:p-3 md:pb-10">
+                  <div className="rounded-[4px] bg-white p-2.5 pb-9 shadow-[0_10px_24px_rgba(70,30,35,0.18)]">
                     <div className="aspect-[4/5] overflow-hidden bg-[#f0e6dc]">
                       <img
                         src={photo.src}
                         alt="Memory"
                         className="h-full w-full object-cover"
                         loading="eager"
-                        onError={(event) => {
-                          event.currentTarget.style.visibility = 'hidden';
-                        }}
                       />
                     </div>
                     <figcaption className="absolute bottom-2 left-0 right-0 px-2 text-center font-hand text-sm text-[#9d4652] md:text-base">
@@ -88,40 +85,46 @@ export default function SummaryScreen({ onRestart }: Props) {
           </div>
 
           {/* Letter */}
-          <article className="relative z-10 mx-auto flex h-full max-w-[700px] flex-col justify-center px-[24%] pb-8 pt-8 text-center md:max-w-[760px] md:px-[20%] md:pb-10 md:pt-7 lg:px-[17%]">
-            <div className="font-hand text-[clamp(1rem,1.35vw,1.28rem)] leading-[1.45] text-[#7f3c49]">
+          <article className="absolute left-1/2 top-[18%] z-10 w-[48%] max-w-[720px] -translate-x-1/2 text-center">
+            <div className="font-hand text-[clamp(0.88rem,1.05vw,1.08rem)] leading-[1.35] text-[#7f3c49]">
               <p>
-                Some people enter your life without any plans,<br className="hidden md:block" />
+                Some people enter your life without any plans,
+                <br />
                 and somehow become a part of your thoughts.
               </p>
 
-              <p className="mt-4">
-                Maybe it&apos;s the conversations, the little moments,<br className="hidden md:block" />
+              <p className="mt-3">
+                Maybe it&apos;s the conversations, the little moments,
+                <br />
                 or simply the way you start looking forward to hearing from them.
               </p>
 
-              <p className="mt-4">
-                I never really knew what this was supposed to become.<br className="hidden md:block" />
-                I just know that somewhere along the way,<br className="hidden md:block" />
+              <p className="mt-3">
+                I never really knew what this was supposed to become.
+                <br />
+                I just know that somewhere along the way,
+                <br />
                 I started hoping there might be a little more to it.
               </p>
 
-              <p className="mt-4 font-semibold text-[#a5233d]">
-                So maybe this isn&apos;t really a question.<br />
+              <p className="mt-3 font-semibold text-[#a5233d]">
+                So maybe this isn&apos;t really a question.
+                <br />
                 Maybe it&apos;s just a small hint...
               </p>
 
-              <p className="mt-4">
-                What if we stopped wondering where this could go<br className="hidden md:block" />
+              <p className="mt-3">
+                What if we stopped wondering where this could go
+                <br />
                 and gave it a chance to find out?
               </p>
 
-              <p className="mt-5 text-[clamp(1.05rem,1.5vw,1.4rem)] font-semibold text-[#a5233d]">
+              <p className="mt-4 text-[clamp(0.95rem,1.15vw,1.18rem)] font-semibold text-[#a5233d]">
                 — from someone who&apos;d like to find out with you ♡
               </p>
             </div>
 
-            <p className="mt-3 font-hand text-xs tracking-[0.12em] text-[#b16a70] md:text-sm">
+            <p className="mt-2 font-hand text-[10px] tracking-[0.12em] text-[#b16a70] md:text-xs">
               keep this page somewhere safe
             </p>
           </article>
