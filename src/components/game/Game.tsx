@@ -57,12 +57,18 @@ function getQuestionPlatforms(H: number): Platform[] {
   return platforms;
 }
 
-function getAnswerPlatforms(H: number): Platform[] {
+function getAnswerPlatforms(H: number, W: number): Platform[] {
+  const centerX = W / 2;
+  const noX = Math.max(20, centerX - 300);
+  const yesX = Math.min(W - 160, centerX + 160);
+  const platformY = H - 180;
+  const lowerY = H - 120;
+
   return [
-    { x: 150, y: H - 180, w: 140, h: 30, color: '#FF1493', type: 'yes', label: 'YES ♥' },
-    { x: 500, y: H - 180, w: 140, h: 30, color: '#888', type: 'no', label: 'NO' },
-    { x: 50, y: H - 120, w: 200, h: 20, color: '#FF69B4' },
-    { x: 400, y: H - 120, w: 200, h: 20, color: '#FF69B4' },
+    { x: noX, y: platformY, w: 140, h: 30, color: '#888', type: 'no', label: 'NO' },
+    { x: yesX, y: platformY, w: 140, h: 30, color: '#FF1493', type: 'yes', label: 'YES ♥' },
+    { x: noX - 40, y: lowerY, w: 220, h: 20, color: '#FF69B4' },
+    { x: yesX - 40, y: lowerY, w: 220, h: 20, color: '#FF69B4' },
   ];
 }
 
@@ -113,22 +119,25 @@ export default function Game() {
 
   const initStage = useCallback((s: GameStage) => {
     const p = playerRef.current;
-    p.x = 60; p.y = 300; p.vx = 0; p.vy = 0;
+    const W = canvasRef.current?.width || window.innerWidth;
+    const H = canvasRef.current?.height || window.innerHeight;
+    p.x = s === 'stage2' ? Math.max(0, W / 2 - p.w / 2) : 60;
+    p.y = s === 'stage2' ? H - 40 - p.h : 300;
+    p.vx = 0; p.vy = 0; p.onGround = s === 'stage2'; p.jumps = 0;
     cameraXRef.current = 0;
     particlesRef.current = [];
     answeredQsRef.current = new Set();
     gamePausedRef.current = false;
     setActiveQuestion(null);
 
-    const H = canvasRef.current?.height || window.innerHeight;
     if (s === 'stage3') {
       platformsRef.current = getQuestionPlatforms(H);
       cloudsRef.current = createClouds(15, 2500, H);
       setCurrentQ(0);
     } else if (s === 'stage2') {
-      platformsRef.current = getAnswerPlatforms(H);
+      platformsRef.current = getAnswerPlatforms(H, W);
       noPlatRef.current = platformsRef.current.find(p => p.type === 'no') || null;
-      cloudsRef.current = createClouds(6, 800, H);
+      cloudsRef.current = createClouds(6, W, H);
     } else if (s === 'stage4') {
       platformsRef.current = getLetterPlatforms(H);
       cloudsRef.current = createClouds(20, 4000, H);
@@ -179,7 +188,8 @@ export default function Game() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       const H = canvas.height;
-      if (stage === 'stage2') platformsRef.current = getAnswerPlatforms(H);
+      const W = canvas.width;
+      if (stage === 'stage2') platformsRef.current = getAnswerPlatforms(H, W);
       else if (stage === 'stage3') platformsRef.current = getQuestionPlatforms(H);
       else if (stage === 'stage4') platformsRef.current = getLetterPlatforms(H);
     };
@@ -230,6 +240,7 @@ export default function Game() {
         p.x += p.vx;
         p.y += p.vy;
         if (p.x < 0) p.x = 0;
+        if (currentStage === 'stage2' && p.x > W - p.w) p.x = W - p.w;
 
         const groundY = H - 40 - p.h;
         if (p.y >= groundY) {
@@ -268,16 +279,25 @@ export default function Game() {
 
         if (currentStage === 'stage2' && noPlatRef.current) {
           const no = noPlatRef.current;
-          const dist = Math.hypot((p.x + p.w / 2) - (no.x + no.w / 2), (p.y + p.h / 2) - (no.y + no.h / 2));
-          if (dist < 100) {
+          const playerCenterX = p.x + p.w / 2;
+          const playerCenterY = p.y + p.h / 2;
+          const noCenterX = no.x + no.w / 2;
+          const noCenterY = no.y + no.h / 2;
+          const dx = noCenterX - playerCenterX;
+          const dy = noCenterY - playerCenterY;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < 190) {
             audioManager.playNoRunAway();
-            no.x += 150 + Math.random() * 100;
-            no.y = 150 + Math.random() * 200;
+            const moveX = dx === 0 ? (noCenterX >= W / 2 ? 1 : -1) : Math.sign(dx);
+            const moveY = Math.sign(dy) * 45;
+            no.x = Math.max(20, Math.min(W - no.w - 20, no.x + moveX * (180 + Math.random() * 80)));
+            no.y = Math.max(150, Math.min(H - 230, no.y + moveY));
           }
         }
       }
 
-      const targetCam = p.x - W / 3;
+      const targetCam = currentStage === 'stage2' ? 0 : p.x - W / 3;
       cameraXRef.current += (targetCam - cameraXRef.current) * 0.08;
       if (cameraXRef.current < 0) cameraXRef.current = 0;
 
