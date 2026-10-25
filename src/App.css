@@ -40,21 +40,3 @@
 .read-the-docs {
   color: #888;
 }
-
-/* Keep the original Stage 2 game layout, but change only its prompt. */
-@supports selector(:has(*)) {
-  .group:has(.text-valentine-gold) p {
-    font-size: 0 !important;
-  }
-
-  .group:has(.text-valentine-gold) p span {
-    display: none;
-  }
-
-  .group:has(.text-valentine-gold) p::after {
-    content: "Are you ready for this date?";
-    font-size: 12px;
-    line-height: 1.8;
-    color: #fff;
-  }
-}
