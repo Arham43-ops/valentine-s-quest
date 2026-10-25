@@ -74,4 +74,4 @@ export const QUESTIONS: Question[] = [
   },
 ];
 
-export type GameStage = 'loading' | 'stage1' | 'stage2' | 'stage3' | 'stage4' | 'summary';
+export type GameStage = 'loading' | 'stage1' | 'stage2' | 'stage3' | 'stage4' | 'transition' | 'summary';
