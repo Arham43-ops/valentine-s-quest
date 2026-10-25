@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f7c4c9"/>
+  <rect x="42" y="38" width="1116" height="554" rx="24" fill="#fffdf5" stroke="#9f3444" stroke-width="3"/>
+  <path d="M42 110H1158M42 182H1158M42 254H1158M42 326H1158M42 398H1158M42 470H1158M42 542H1158" stroke="#d9a5a5" stroke-opacity=".25"/>
+  <path d="M130 38V592M202 38V592M274 38V592M346 38V592M418 38V592M490 38V592M562 38V592M634 38V592M706 38V592M778 38V592M850 38V592M922 38V592M994 38V592M1066 38V592" stroke="#d9a5a5" stroke-opacity=".25"/>
+  <text x="600" y="150" text-anchor="middle" font-family="monospace" font-size="24" letter-spacing="7" fill="#a43b4d">A LITTLE NOTE, FOR YOU</text>
+  <text x="600" y="260" text-anchor="middle" font-family="monospace" font-size="74" font-weight="700" fill="#a5233d">A LITTLE DATE QUEST</text>
+  <path d="M545 292H655" stroke="#b64a58" stroke-width="2"/>
+  <text x="600" y="360" text-anchor="middle" font-family="cursive" font-size="31" fill="#7f3c49">A tiny little journey, a few questions,</text>
+  <text x="600" y="405" text-anchor="middle" font-family="cursive" font-size="31" fill="#7f3c49">and maybe something worth finding out.</text>
+  <path d="M600 500c-50-38-92-72-92-113 0-23 18-40 41-40 22 0 39 12 51 31 12-19 29-31 51-31 23 0 41 17 41 40 0 41-42 75-92 113Z" fill="#a5233d"/>
+</svg>
