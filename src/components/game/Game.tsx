@@ -150,6 +150,12 @@ export default function Game() {
     setStage(s);
   }, []);
 
+  const handleStartGame = useCallback(() => {
+    audioManager.init();
+    audioManager.startBgMusic();
+    initStage('stage3');
+  }, [initStage]);
+
   const handleAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     const fullAnswer = QUESTIONS[questionIndex].answers[answerIndex];
     audioManager.playCollect();
@@ -216,8 +222,6 @@ export default function Game() {
     let animId: number;
 
     audioManager.init();
-    audioManager.startBgMusic();
-    initStage('stage3');
 
     const loop = () => {
       animId = requestAnimationFrame(loop);
@@ -229,7 +233,7 @@ export default function Game() {
       const touch = touchRef.current;
       const currentStage = stageRef.current;
 
-      if (currentStage === 'loading' || currentStage === 'summary' || currentStage === 'transition') return;
+      if (currentStage === 'loading' || currentStage === 'intro' || currentStage === 'summary' || currentStage === 'transition') return;
 
       if (!gamePausedRef.current) {
         const left = keys.has('arrowleft') || keys.has('a') || touch.left;
@@ -450,6 +454,71 @@ export default function Game() {
             </button>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (stage === 'intro' || stage === 'loading') {
+    return (
+      <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#f7c4c9] px-5 py-8 select-none">
+        <div className="pointer-events-none absolute inset-0 opacity-55 [background-image:linear-gradient(rgba(139,0,0,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(139,0,0,0.08)_1px,transparent_1px)] [background-size:32px_32px]" />
+        <div className="pointer-events-none absolute -left-20 top-16 h-56 w-56 rounded-full bg-[#ff8da0]/30 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-[#ff69b4]/20 blur-3xl" />
+
+        <main className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center">
+          <p className="font-pixel text-[8px] uppercase tracking-[0.28em] text-[#8b0000]/65 md:text-[10px]">
+            a little something i made for you
+          </p>
+
+          <h1 className="mt-5 font-pixel text-2xl leading-relaxed text-[#8b0000] drop-shadow-sm md:text-4xl">
+            A Little Date Quest
+          </h1>
+
+          <div className="mt-7 w-full max-w-2xl rounded-[26px] border-4 border-[#a5233d] bg-[#fffdf5]/95 px-6 py-7 shadow-[10px_12px_0_rgba(130,48,61,0.12)] backdrop-blur-sm md:px-12 md:py-9">
+            <p className="font-hand text-xl leading-relaxed text-[#7f3c49] md:text-2xl">
+              I could have just sent you a message, but I wanted to make something a little more memorable.
+            </p>
+            <p className="mx-auto mt-4 max-w-xl font-hand text-lg leading-relaxed text-[#8f5260] md:text-xl">
+              This is a tiny game where you get to choose how our imaginary date starts, what we do, and what kind of evening sounds good to you.
+            </p>
+            <p className="mt-4 font-hand text-lg font-semibold text-[#a5233d] md:text-xl">
+              There are no right or wrong answers. Just pick what feels like you.
+            </p>
+
+            <div className="mx-auto mt-7 grid max-w-xl gap-3 text-left md:grid-cols-3 md:gap-4">
+              <div className="rounded-xl border-2 border-[#f0a2ad] bg-[#fff6f7] px-4 py-3">
+                <p className="font-pixel text-[8px] text-[#a5233d]">01 · EXPLORE</p>
+                <p className="mt-2 font-hand text-base text-[#7f3c49]">Move through the world and find the ? blocks.</p>
+              </div>
+              <div className="rounded-xl border-2 border-[#f0a2ad] bg-[#fff6f7] px-4 py-3">
+                <p className="font-pixel text-[8px] text-[#a5233d]">02 · ANSWER</p>
+                <p className="mt-2 font-hand text-base text-[#7f3c49]">Jump onto each ? and choose your answer.</p>
+              </div>
+              <div className="rounded-xl border-2 border-[#f0a2ad] bg-[#fff6f7] px-4 py-3">
+                <p className="font-pixel text-[8px] text-[#a5233d]">03 · KEEP GOING</p>
+                <p className="mt-2 font-hand text-base text-[#7f3c49]">Follow the next little challenge until the final page.</p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            aria-label="Start the date quest"
+            onClick={handleStartGame}
+            className="group mt-8 flex h-24 w-24 items-center justify-center rounded-full border-4 border-[#8b0000] bg-[#ff6578] shadow-[0_8px_0_#970f22,0_12px_25px_rgba(130,48,61,0.22)] transition-all duration-200 hover:-translate-y-1 hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#970f22,0_7px_15px_rgba(130,48,61,0.18)] md:h-28 md:w-28"
+          >
+            <span className="ml-2 h-0 w-0 border-y-[15px] border-l-[23px] border-y-transparent border-l-white transition-transform duration-200 group-hover:scale-110 md:border-y-[18px] md:border-l-[28px]" />
+          </button>
+          <p className="mt-4 font-pixel text-[9px] uppercase tracking-[0.22em] text-[#8b0000]/75 md:text-[10px]">
+            press play to begin
+          </p>
+
+          <div className="mt-6 flex flex-col items-center gap-1 text-[#8b0000]/65">
+            <p className="font-pixel text-[7px] uppercase tracking-wider md:text-[8px]">Controls</p>
+            <p className="font-hand text-base md:text-lg">Desktop: ← → or A / D · Jump: Space / W / ↑</p>
+            <p className="font-hand text-sm md:text-base">Mobile: use the on-screen controls</p>
+          </div>
+        </main>
       </div>
     );
   }
