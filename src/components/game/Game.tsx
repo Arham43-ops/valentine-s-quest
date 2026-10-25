@@ -263,14 +263,10 @@ export default function Game() {
         }
         p.onGround = p.y >= groundY;
 
-        // Always resolve the actual NO object from the current platform array.
-        // A resize recreates the platform objects, so the ref must follow that object.
         if (currentStage === 'stage2') {
           noPlatRef.current = platformsRef.current.find(pl => pl.type === 'no') || null;
         }
 
-        // NO stays down at the same height as YES and only escapes when the
-        // player gets close. This moves the actual platform object, not a copy.
         if (currentStage === 'stage2' && noPlatRef.current) {
           const no = noPlatRef.current;
           const playerCenterX = p.x + p.w / 2;
@@ -283,19 +279,14 @@ export default function Game() {
 
           if (dist < 250) {
             audioManager.playNoRunAway();
-
-            // Keep NO on the same lower level, but teleport it horizontally
-            // to whichever side is farther from the player.
             const leftX = 70;
             const rightX = W - no.w - 70;
             const leftDistance = Math.abs((leftX + no.w / 2) - playerCenterX);
             const rightDistance = Math.abs((rightX + no.w / 2) - playerCenterX);
             const targetX = leftDistance > rightDistance ? leftX : rightX;
-
             no.x = Math.max(20, Math.min(W - no.w - 20, targetX));
             no.y = H - 180;
 
-            // Final safety check: never leave NO within reach after escaping.
             const movedDistance = Math.hypot(
               (no.x + no.w / 2) - playerCenterX,
               (no.y + no.h / 2) - playerCenterY
@@ -308,7 +299,6 @@ export default function Game() {
         }
 
         for (const pl of platformsRef.current) {
-          // NO is never a solid platform. The player cannot stand on it.
           if (currentStage === 'stage2' && pl.type === 'no') continue;
 
           if (p.x + p.w > pl.x && p.x < pl.x + pl.w && p.y + p.h >= pl.y && p.y + p.h <= pl.y + pl.h + 8 && p.vy >= 0) {
@@ -524,7 +514,9 @@ export default function Game() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background relative select-none w-full h-screen overflow-hidden">
+    <div className="relative h-screen w-full overflow-hidden bg-background select-none">
+      <canvas ref={canvasRef} className="absolute inset-0 z-0 block h-full w-full" style={{ imageRendering: 'pixelated' }} />
+
       <button onClick={handleMute} className="absolute top-4 left-4 z-20 bg-valentine-red/80 backdrop-blur-sm text-primary-foreground font-pixel text-xs px-4 py-3 rounded-full border-2 border-valentine-gold hover:scale-110 transition-all shadow-lg">
         {muted ? '🔇' : '🔊'}
       </button>
@@ -562,12 +554,9 @@ export default function Game() {
         )}
       </div>
 
-      <div className="relative w-full h-full flex items-center justify-center">
-        <canvas ref={canvasRef} className="w-full h-full" style={{ imageRendering: 'pixelated' }} />
-        {activeQuestion !== null && <QuestionPopup questionIndex={activeQuestion} onAnswer={handleAnswer} />}
-      </div>
+      {activeQuestion !== null && <QuestionPopup questionIndex={activeQuestion} onAnswer={handleAnswer} />}
 
-      <div className="flex gap-4 mt-3 md:hidden">
+      <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-4 md:hidden">
         <button className="bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onTouchStart={() => { touchRef.current.left = true; }} onTouchEnd={() => { touchRef.current.left = false; }} onMouseDown={() => { touchRef.current.left = true; }} onMouseUp={() => { touchRef.current.left = false; }}>←</button>
         <button className="bg-valentine-gold text-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onTouchStart={() => { touchRef.current.jump = true; }} onTouchEnd={() => { touchRef.current.jump = false; }} onMouseDown={() => { touchRef.current.jump = true; }} onMouseUp={() => { touchRef.current.jump = false; }}>▲</button>
         <button className="bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onTouchStart={() => { touchRef.current.right = true; }} onTouchEnd={() => { touchRef.current.right = false; }} onMouseDown={() => { touchRef.current.right = true; }} onMouseUp={() => { touchRef.current.right = false; }}>→</button>
