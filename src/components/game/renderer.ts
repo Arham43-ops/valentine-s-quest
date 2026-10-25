@@ -1,9 +1,5 @@
 import { Player, Platform, Particle, Cloud } from './types';
 
-// The canvas renderer sees the player every frame. Keep the latest screen-space
-// position so the NO button can visually escape before the player gets near it.
-let lastPlayer: Player | null = null;
-
 export function drawCloud(ctx: CanvasRenderingContext2D, c: Cloud) {
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   ctx.beginPath();
@@ -20,7 +16,6 @@ export function drawCloud(ctx: CanvasRenderingContext2D, c: Cloud) {
 export function drawPixelHeart(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, color = '#FF1493') {
   ctx.fillStyle = color;
   const s = size / 8;
-  // Simple pixel heart pattern
   const rows = [
     [0, 1, 1, 0, 0, 1, 1, 0],
     [1, 1, 1, 1, 1, 1, 1, 1],
@@ -41,85 +36,41 @@ export function drawPixelHeart(ctx: CanvasRenderingContext2D, cx: number, cy: nu
 }
 
 export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, frame: number) {
-  // Save the player's screen-space position for the NO escape renderer.
-  lastPlayer = p;
-
   const { x, y, w, h, facing } = p;
-  // Body
   ctx.fillStyle = '#FF69B4';
   ctx.fillRect(x + 4, y + 8, w - 8, h - 16);
-  // Head
   ctx.fillStyle = '#FFD1DC';
   ctx.fillRect(x + 6, y, w - 12, 12);
-  // Eyes
   ctx.fillStyle = '#333';
   const eyeOff = facing > 0 ? 4 : -4;
   ctx.fillRect(x + w / 2 - 4 + eyeOff, y + 4, 3, 3);
   ctx.fillRect(x + w / 2 + 2 + eyeOff, y + 4, 3, 3);
-  // Legs (animated)
   ctx.fillStyle = '#DC143C';
   const legOff = Math.abs(Math.sin(frame * 0.2)) * 3;
   ctx.fillRect(x + 6, y + h - 8, 6, 8 + (p.vx !== 0 ? legOff : 0));
   ctx.fillRect(x + w - 12, y + h - 8, 6, 8 + (p.vx !== 0 ? -legOff + 3 : 0));
-  // Heart on chest
   drawPixelHeart(ctx, x + w / 2, y + 14, 8, '#FF1493');
 }
 
 export function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform) {
-  let x = p.x;
-  let y = p.y;
-
-  // NO is intentionally only a visual target. When the player approaches it,
-  // move the rendered button to the opposite side of the screen immediately.
-  // Game.tsx already excludes the NO platform from collision detection.
-  if (p.type === 'no' && lastPlayer) {
-    const canvasW = ctx.canvas.width;
-    const canvasH = ctx.canvas.height;
-    const playerCenterX = lastPlayer.x + lastPlayer.w / 2;
-    const playerCenterY = lastPlayer.y + lastPlayer.h / 2;
-    const noCenterX = x + p.w / 2;
-    const noCenterY = y + p.h / 2;
-    const dx = noCenterX - playerCenterX;
-    const dy = noCenterY - playerCenterY;
-    const distance = Math.hypot(dx, dy);
-
-    if (distance < 360) {
-      const playerOnLeft = playerCenterX < canvasW / 2;
-      const safeX = playerOnLeft
-        ? canvasW - p.w - 70
-        : 70;
-      const verticalBase = playerCenterY < canvasH / 2
-        ? canvasH - 260
-        : 150;
-      const motion = Math.sin(performance.now() / 140) * 55;
-
-      x = Math.max(30, Math.min(canvasW - p.w - 30, safeX + motion));
-      y = Math.max(120, Math.min(canvasH - 230, verticalBase + motion * 0.45));
-    }
-  }
-
   const col = p.color || '#FF69B4';
   ctx.fillStyle = col;
-  ctx.fillRect(x, y, p.w, p.h);
-  // Top highlight
+  ctx.fillRect(p.x, p.y, p.w, p.h);
   ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.fillRect(x, y, p.w, 4);
-  // Bottom shadow
+  ctx.fillRect(p.x, p.y, p.w, 4);
   ctx.fillStyle = 'rgba(0,0,0,0.15)';
-  ctx.fillRect(x, y + p.h - 4, p.w, 4);
-  // Heart pattern
+  ctx.fillRect(p.x, p.y + p.h - 4, p.w, 4);
   if (p.w > 40) {
     const hearts = Math.floor(p.w / 40);
     for (let i = 0; i < hearts; i++) {
-      drawPixelHeart(ctx, x + 20 + i * 40, y + p.h / 2, 12, 'rgba(255,255,255,0.25)');
+      drawPixelHeart(ctx, p.x + 20 + i * 40, p.y + p.h / 2, 12, 'rgba(255,255,255,0.25)');
     }
   }
-  // Label
   if (p.label) {
     ctx.fillStyle = '#fff';
     ctx.font = '10px "Press Start 2P", cursive';
     ctx.textAlign = 'center';
-    ctx.fillText(p.label, x + p.w / 2, y + p.h / 2 + 4);
+    ctx.fillText(p.label, p.x + p.w / 2, p.y + p.h / 2 + 4);
     ctx.textAlign = 'left';
   }
 }
@@ -131,10 +82,8 @@ export function drawGround(ctx: CanvasRenderingContext2D, cameraX: number, canva
     const shade = (Math.abs(gx / 40) % 2 === 0) ? '#FF69B4' : '#FF85C8';
     ctx.fillStyle = shade;
     ctx.fillRect(gx - cameraX, groundY, 40, 40);
-    // Heart on ground tiles
     drawPixelHeart(ctx, gx - cameraX + 20, groundY + 20, 10, 'rgba(255,255,255,0.15)');
   }
-  // Top border
   ctx.fillStyle = '#DC143C';
   ctx.fillRect(0, groundY, canvasW, 4);
 }
@@ -158,24 +107,16 @@ export function drawLetter(ctx: CanvasRenderingContext2D, x: number, y: number, 
   const ly = y + hover;
   const w = 32;
   const h = 24;
-
-  // Envelope Body
   ctx.fillStyle = '#fdfdfd';
   ctx.fillRect(x, ly, w, h);
-
-  // Envelope Border
   ctx.strokeStyle = '#d4af37';
   ctx.lineWidth = 1;
   ctx.strokeRect(x, ly, w, h);
-
-  // Envelope Flap
   ctx.beginPath();
   ctx.moveTo(x, ly);
   ctx.lineTo(x + w / 2, ly + h / 2);
   ctx.lineTo(x + w, ly);
   ctx.stroke();
-
-  // Heart Seal
   drawPixelHeart(ctx, x + w / 2, ly + h / 2 + 2, 8, '#DC143C');
 }
 
