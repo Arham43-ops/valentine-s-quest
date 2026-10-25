@@ -1,5 +1,9 @@
 import { Player, Platform, Particle, Cloud } from './types';
 
+// The canvas renderer sees the player every frame. Keep the latest screen-space
+// position so the NO button can visually escape before the player gets near it.
+let lastPlayer: Player | null = null;
+
 export function drawCloud(ctx: CanvasRenderingContext2D, c: Cloud) {
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   ctx.beginPath();
@@ -37,6 +41,9 @@ export function drawPixelHeart(ctx: CanvasRenderingContext2D, cx: number, cy: nu
 }
 
 export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, frame: number) {
+  // Save the player's screen-space position for the NO escape renderer.
+  lastPlayer = p;
+
   const { x, y, w, h, facing } = p;
   // Body
   ctx.fillStyle = '#FF69B4';
@@ -59,20 +66,52 @@ export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, frame: numb
 }
 
 export function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform) {
+  let x = p.x;
+  let y = p.y;
+
+  // NO is intentionally only a visual target. When the player approaches it,
+  // move the rendered button to the opposite side of the screen immediately.
+  // Game.tsx already excludes the NO platform from collision detection.
+  if (p.type === 'no' && lastPlayer) {
+    const canvasW = ctx.canvas.width;
+    const canvasH = ctx.canvas.height;
+    const playerCenterX = lastPlayer.x + lastPlayer.w / 2;
+    const playerCenterY = lastPlayer.y + lastPlayer.h / 2;
+    const noCenterX = x + p.w / 2;
+    const noCenterY = y + p.h / 2;
+    const dx = noCenterX - playerCenterX;
+    const dy = noCenterY - playerCenterY;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance < 360) {
+      const playerOnLeft = playerCenterX < canvasW / 2;
+      const safeX = playerOnLeft
+        ? canvasW - p.w - 70
+        : 70;
+      const verticalBase = playerCenterY < canvasH / 2
+        ? canvasH - 260
+        : 150;
+      const motion = Math.sin(performance.now() / 140) * 55;
+
+      x = Math.max(30, Math.min(canvasW - p.w - 30, safeX + motion));
+      y = Math.max(120, Math.min(canvasH - 230, verticalBase + motion * 0.45));
+    }
+  }
+
   const col = p.color || '#FF69B4';
   ctx.fillStyle = col;
-  ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.fillRect(x, y, p.w, p.h);
   // Top highlight
   ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.fillRect(p.x, p.y, p.w, 4);
+  ctx.fillRect(x, y, p.w, 4);
   // Bottom shadow
   ctx.fillStyle = 'rgba(0,0,0,0.15)';
-  ctx.fillRect(p.x, p.y + p.h - 4, p.w, 4);
+  ctx.fillRect(x, y + p.h - 4, p.w, 4);
   // Heart pattern
   if (p.w > 40) {
     const hearts = Math.floor(p.w / 40);
     for (let i = 0; i < hearts; i++) {
-      drawPixelHeart(ctx, p.x + 20 + i * 40, p.y + p.h / 2, 12, 'rgba(255,255,255,0.25)');
+      drawPixelHeart(ctx, x + 20 + i * 40, y + p.h / 2, 12, 'rgba(255,255,255,0.25)');
     }
   }
   // Label
@@ -80,7 +119,7 @@ export function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform) {
     ctx.fillStyle = '#fff';
     ctx.font = '10px "Press Start 2P", cursive';
     ctx.textAlign = 'center';
-    ctx.fillText(p.label, p.x + p.w / 2, p.y + p.h / 2 + 4);
+    ctx.fillText(p.label, x + p.w / 2, y + p.h / 2 + 4);
     ctx.textAlign = 'left';
   }
 }
