@@ -132,6 +132,7 @@ export default function Game() {
 
     if (s === 'stage3') {
       platformsRef.current = getQuestionPlatforms(H);
+      noPlatRef.current = null;
       cloudsRef.current = createClouds(15, 2500, H);
       setCurrentQ(0);
     } else if (s === 'stage2') {
@@ -140,6 +141,7 @@ export default function Game() {
       cloudsRef.current = createClouds(6, W, H);
     } else if (s === 'stage4') {
       platformsRef.current = getLetterPlatforms(H);
+      noPlatRef.current = null;
       cloudsRef.current = createClouds(20, 4000, H);
     }
     setStage(s);
@@ -189,9 +191,15 @@ export default function Game() {
       canvas.height = window.innerHeight;
       const H = canvas.height;
       const W = canvas.width;
-      if (stage === 'stage2') platformsRef.current = getAnswerPlatforms(H, W);
-      else if (stage === 'stage3') platformsRef.current = getQuestionPlatforms(H);
-      else if (stage === 'stage4') platformsRef.current = getLetterPlatforms(H);
+      if (stage === 'stage2') {
+        const nextPlatforms = getAnswerPlatforms(H, W);
+        platformsRef.current = nextPlatforms;
+        noPlatRef.current = nextPlatforms.find(p => p.type === 'no') || null;
+      } else if (stage === 'stage3') {
+        platformsRef.current = getQuestionPlatforms(H);
+      } else if (stage === 'stage4') {
+        platformsRef.current = getLetterPlatforms(H);
+      }
     };
     resize();
     window.addEventListener('resize', resize);
@@ -248,8 +256,14 @@ export default function Game() {
         }
         p.onGround = p.y >= groundY;
 
-        // Stage 2: make the NO platform escape BEFORE collision detection.
-        // It is intentionally not collidable, so the player can never stand on/touch it.
+        // Always resolve the actual NO object from the current platform array.
+        // A resize recreates the platform objects, so the ref must follow that object.
+        if (currentStage === 'stage2') {
+          noPlatRef.current = platformsRef.current.find(pl => pl.type === 'no') || null;
+        }
+
+        // NO stays down at the same height as YES and only escapes when the
+        // player gets close. This moves the actual platform object, not a copy.
         if (currentStage === 'stage2' && noPlatRef.current) {
           const no = noPlatRef.current;
           const playerCenterX = p.x + p.w / 2;
@@ -260,36 +274,34 @@ export default function Game() {
           const dy = noCenterY - playerCenterY;
           const dist = Math.hypot(dx, dy);
 
-          if (dist < 270) {
+          if (dist < 250) {
             audioManager.playNoRunAway();
 
-            // Pick a new position that is significantly farther from the player.
-            // Prefer the side opposite the player's current position and keep it visible.
-            const directionX = dx >= 0 ? 1 : -1;
-            const directionY = dy >= 0 ? 1 : -1;
-            const escapeX = no.x + directionX * (220 + Math.random() * 120);
-            const escapeY = no.y + directionY * (70 + Math.random() * 100);
+            // Keep NO on the same lower level, but teleport it horizontally
+            // to whichever side is farther from the player.
+            const leftX = 70;
+            const rightX = W - no.w - 70;
+            const leftDistance = Math.abs((leftX + no.w / 2) - playerCenterX);
+            const rightDistance = Math.abs((rightX + no.w / 2) - playerCenterX);
+            const targetX = leftDistance > rightDistance ? leftX : rightX;
 
-            no.x = Math.max(20, Math.min(W - no.w - 20, escapeX));
-            no.y = Math.max(130, Math.min(H - 230, escapeY));
+            no.x = Math.max(20, Math.min(W - no.w - 20, targetX));
+            no.y = H - 180;
 
-            // If the edge stopped the horizontal escape, give it a second safe jump.
-            const newDist = Math.hypot(
+            // Final safety check: never leave NO within reach after escaping.
+            const movedDistance = Math.hypot(
               (no.x + no.w / 2) - playerCenterX,
               (no.y + no.h / 2) - playerCenterY
             );
-            if (newDist < 220) {
-              const sideX = playerCenterX < W / 2
-                ? W * 0.68 + Math.random() * W * 0.18
-                : W * 0.08 + Math.random() * W * 0.18;
-              no.x = Math.max(20, Math.min(W - no.w - 20, sideX));
-              no.y = Math.max(130, Math.min(H - 230, 150 + Math.random() * Math.max(80, H - 380)));
+            if (movedDistance < 250) {
+              no.x = playerCenterX < W / 2 ? W - no.w - 70 : 70;
+              no.y = H - 180;
             }
           }
         }
 
         for (const pl of platformsRef.current) {
-          // NO is a visual target only. It must never become a solid platform.
+          // NO is never a solid platform. The player cannot stand on it.
           if (currentStage === 'stage2' && pl.type === 'no') continue;
 
           if (p.x + p.w > pl.x && p.x < pl.x + pl.w && p.y + p.h >= pl.y && p.y + p.h <= pl.y + pl.h + 8 && p.vy >= 0) {
