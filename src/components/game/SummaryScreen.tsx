@@ -35,24 +35,8 @@ function MemoryCard({ src, caption, rotate }: { src: string; caption: string; ro
 }
 
 export default function SummaryScreen({ onRestart }: Props) {
-  const sendMessage = async () => {
-    const message = "I just finished your little date quest. That was actually really cute. I think we should give this a chance and pick a day to go out. :)";
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'A Little Date Quest', text: message });
-        return;
-      } catch {
-        // User cancelled sharing; keep the page unchanged.
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(message);
-      alert('Message copied to your clipboard ♡');
-    } catch {
-      alert(message);
-    }
+  const openGift = () => {
+    window.location.href = 'https://secretgardengifting.vercel.app/b/bd0bEGfG';
   };
 
   return (
@@ -147,10 +131,10 @@ export default function SummaryScreen({ onRestart }: Props) {
             ↻ PLAY AGAIN
           </button>
           <button
-            onClick={sendMessage}
+            onClick={openGift}
             className="min-h-12 flex-1 rounded-sm border-r-4 border-b-4 border-[#970f22] bg-[#ff6578] px-6 py-3 font-pixel text-sm text-white shadow-[0_5px_0_rgba(110,24,35,0.12)] transition-transform hover:-translate-y-0.5 active:translate-y-0.5 md:max-w-[390px] md:text-base"
           >
-            ♡ SEND MESSAGE
+            ♡ OPEN YOUR GIFT
           </button>
         </div>
       </div>
