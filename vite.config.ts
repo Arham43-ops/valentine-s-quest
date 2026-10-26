@@ -72,17 +72,23 @@ export default defineConfig(() => ({
             `<div className="absolute top-16 md:top-10 left-1/2 -translate-x-1/2 z-10 pointer-events-none`,
           );
 
+          // The game already has touch controls in the source. Do not rely on
+          // Tailwind's md:hidden breakpoint for visibility; some mobile
+          // browsers can report a larger layout viewport during game startup.
           transformed = transformed.replace(
-            `      <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-4 md:hidden">
-        <button className="bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onTouchStart={() => { touchRef.current.left = true; }} onTouchEnd={() => { touchRef.current.left = false; }} onMouseDown={() => { touchRef.current.left = true; }} onMouseUp={() => { touchRef.current.left = false; }}>←</button>
-        <button className="bg-valentine-gold text-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onTouchStart={() => { touchRef.current.jump = true; }} onTouchEnd={() => { touchRef.current.jump = false; }} onMouseDown={() => { touchRef.current.jump = true; }} onMouseUp={() => { touchRef.current.jump = false; }}>▲</button>
-        <button className="bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onTouchStart={() => { touchRef.current.right = true; }} onTouchEnd={() => { touchRef.current.right = false; }} onMouseDown={() => { touchRef.current.right = true; }} onMouseUp={() => { touchRef.current.right = false; }}>→</button>
-      </div>`,
-            `      <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-3 md:hidden" style={{ touchAction: 'none' }}>
-        <button aria-label="Move left" className="touch-none select-none bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onPointerDown={(e) => { e.preventDefault(); touchRef.current.left = true; }} onPointerUp={() => { touchRef.current.left = false; }} onPointerCancel={() => { touchRef.current.left = false; }} onPointerLeave={() => { touchRef.current.left = false; }}>←</button>
-        <button aria-label="Jump" className="touch-none select-none bg-valentine-gold text-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onPointerDown={(e) => { e.preventDefault(); touchRef.current.jump = true; }} onPointerUp={() => { touchRef.current.jump = false; }} onPointerCancel={() => { touchRef.current.jump = false; }} onPointerLeave={() => { touchRef.current.jump = false; }}>▲</button>
-        <button aria-label="Move right" className="touch-none select-none bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onPointerDown={(e) => { e.preventDefault(); touchRef.current.right = true; }} onPointerUp={() => { touchRef.current.right = false; }} onPointerCancel={() => { touchRef.current.right = false; }} onPointerLeave={() => { touchRef.current.right = false; }}>→</button>
-      </div>`,
+            `className="fixed bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-3 md:hidden"`,
+            `className="fixed bottom-3 left-1/2 z-30 flex -translate-x-1/2 gap-3"`,
+          );
+          transformed = transformed.replace(
+            `style={{ bottom: 'calc(16px + env(safe-area-inset-bottom))', touchAction: 'none' }}`,
+            `style={{ bottom: 'calc(16px + env(safe-area-inset-bottom))', touchAction: 'none', display: typeof window !== 'undefined' && window.innerWidth < 768 ? 'flex' : 'none' }}`,
+          );
+
+          // Keep the decorative ground well below the playable platforms on
+          // phones so the game world does not collapse into one bottom strip.
+          transformed = transformed.replace(
+            `const groundOffset = mobileGame ? 120 : 40;`,
+            `const groundOffset = mobileGame ? 132 : 40;`,
           );
 
           return transformed;
@@ -97,7 +103,7 @@ export default defineConfig(() => ({
 
           transformed = transformed.replace(
             `  const groundY = canvasH - 40;`,
-            `  const groundY = canvasH - (canvasW < 768 ? 120 : 40);`,
+            `  const groundY = canvasH - (canvasW < 768 ? 132 : 40);`,
           );
 
           return transformed;
