@@ -47,14 +47,49 @@ export default defineConfig(() => ({
             `    p.x = s === 'stage2' ? Math.max(0, W / 2 - p.w / 2) : 60;
     p.y = s === 'stage2' ? H - 40 - p.h : 300;`,
             `    const mobileGame = W < 768;
-    const groundOffset = mobileGame ? 120 : 40;
+    const groundOffset = mobileGame ? 132 : 40;
     p.x = s === 'stage2' ? Math.max(0, W / 2 - p.w / 2) : 60;
     p.y = s === 'stage2' ? H - groundOffset - p.h : mobileGame ? H - groundOffset - p.h : 300;`,
           );
 
           transformed = transformed.replace(
             `        const groundY = H - 40 - p.h;`,
-            `        const groundY = H - (W < 768 ? 120 : 40) - p.h;`,
+            `        const groundY = H - (W < 768 ? 132 : 40) - p.h;`,
+          );
+
+          // On phones reserve the bottom control area and lift playable
+          // platforms into the main game area. Desktop positions stay intact.
+          transformed = transformed.replace(
+            `const spacing = 350;\n  for (let q = 0; q < QUESTIONS.length; q++) {`,
+            `const spacing = 350;\n  const mobileGame = typeof window !== 'undefined' && window.innerWidth < 768;\n  const questionPlatformY = mobileGame ? H - 290 : H - 160;\n  const connectorPlatformY = mobileGame ? H - 220 : H - 140;\n  for (let q = 0; q < QUESTIONS.length; q++) {`,
+          );
+          transformed = transformed.replace(
+            `y: H - 140, w: 80, h: 20, color: '#FF69B4'`,
+            `y: connectorPlatformY, w: 80, h: 20, color: '#FF69B4'`,
+          );
+          transformed = transformed.replace(
+            `y: H - 160,\n      w: 60,`,
+            `y: questionPlatformY,\n      w: 60,`,
+          );
+
+          transformed = transformed.replace(
+            `  const platformY = H - 180;\n  const lowerY = H - 120;`,
+            `  const mobileGame = W < 768;\n  const platformY = mobileGame ? H - 300 : H - 180;\n  const lowerY = mobileGame ? H - 205 : H - 120;`,
+          );
+
+          transformed = transformed.replace(
+            `no.y = H - 180;`,
+            `no.y = W < 768 ? H - 300 : H - 180;`,
+          );
+
+          transformed = transformed.replace(
+            `no.y = H - 180;`,
+            `no.y = W < 768 ? H - 300 : H - 180;`,
+          );
+
+          transformed = transformed.replace(
+            `const spacing = 320;\n  for (let i = 0; i < 11; i++) {\n    platforms.push({ x: 200 + i * spacing, y: H - 150 - Math.sin(i * 0.5) * 120,`,
+            `const spacing = 320;\n  const mobileGame = typeof window !== 'undefined' && window.innerWidth < 768;\n  const letterBaseY = mobileGame ? H - 245 : H - 150;\n  for (let i = 0; i < 11; i++) {\n    platforms.push({ x: 200 + i * spacing, y: letterBaseY - Math.sin(i * 0.5) * (mobileGame ? 90 : 120),`,
           );
 
           transformed = transformed.replace(
@@ -72,9 +107,8 @@ export default defineConfig(() => ({
             `<div className="absolute top-16 md:top-10 left-1/2 -translate-x-1/2 z-10 pointer-events-none`,
           );
 
-          // The game already has touch controls in the source. Do not rely on
-          // Tailwind's md:hidden breakpoint for visibility; some mobile
-          // browsers can report a larger layout viewport during game startup.
+          // Force the mobile controls to use the actual device width instead
+          // of relying on Tailwind's breakpoint detection.
           transformed = transformed.replace(
             `className="fixed bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-3 md:hidden"`,
             `className="fixed bottom-3 left-1/2 z-30 flex -translate-x-1/2 gap-3"`,
@@ -84,21 +118,13 @@ export default defineConfig(() => ({
             `style={{ bottom: 'calc(16px + env(safe-area-inset-bottom))', touchAction: 'none', display: typeof window !== 'undefined' && window.innerWidth < 768 ? 'flex' : 'none' }}`,
           );
 
-          // Keep the decorative ground well below the playable platforms on
-          // phones so the game world does not collapse into one bottom strip.
-          transformed = transformed.replace(
-            `const groundOffset = mobileGame ? 120 : 40;`,
-            `const groundOffset = mobileGame ? 132 : 40;`,
-          );
-
           return transformed;
         }
 
         if (id.endsWith("/src/components/game/renderer.ts")) {
           let transformed = code.replace(
             `  const renderY = p.type === 'no' ? ctx.canvas.height - 180 : p.y;`,
-            `  const mobileOffset = ctx.canvas.width < 768 ? 80 : 0;
-  const renderY = p.type === 'no' ? ctx.canvas.height - 180 - mobileOffset : p.y;`,
+            `  const mobileOffset = ctx.canvas.width < 768 ? 80 : 0;\n  const renderY = p.type === 'no' ? ctx.canvas.height - 180 - mobileOffset : p.y;`,
           );
 
           transformed = transformed.replace(
