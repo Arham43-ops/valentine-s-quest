@@ -59,16 +59,21 @@ function getQuestionPlatforms(H: number): Platform[] {
 
 function getAnswerPlatforms(H: number, W: number): Platform[] {
   const centerX = W / 2;
-  const noX = Math.max(30, centerX - 340);
-  const yesX = Math.min(W - 170, centerX + 170);
-  const platformY = H - 180;
-  const lowerY = H - 120;
+  const isMobile = W <= 768;
+
+  // On short mobile screens, keep the YES/NO platforms visibly above the
+  // ground instead of compressing every platform into the bottom strip.
+  // The lower support platforms remain reachable and create two clear levels.
+  const platformY = isMobile ? Math.max(170, H - 260) : H - 180;
+  const lowerY = isMobile ? Math.max(260, H - 150) : H - 120;
+  const noX = isMobile ? 36 : Math.max(30, centerX - 340);
+  const yesX = isMobile ? Math.max(180, W - 180) : Math.min(W - 170, centerX + 170);
 
   return [
     { x: noX, y: platformY, w: 140, h: 30, color: '#888', type: 'no', label: 'NO' },
     { x: yesX, y: platformY, w: 140, h: 30, color: '#FF1493', type: 'yes', label: 'YES ♥' },
-    { x: noX - 40, y: lowerY, w: 220, h: 20, color: '#FF69B4' },
-    { x: yesX - 40, y: lowerY, w: 220, h: 20, color: '#FF69B4' },
+    { x: noX - (isMobile ? 4 : 40), y: lowerY, w: isMobile ? 150 : 220, h: 20, color: '#FF69B4' },
+    { x: yesX - (isMobile ? 4 : 40), y: lowerY, w: isMobile ? 150 : 220, h: 20, color: '#FF69B4' },
   ];
 }
 
@@ -285,7 +290,7 @@ export default function Game() {
             const rightDistance = Math.abs((rightX + no.w / 2) - playerCenterX);
             const targetX = leftDistance > rightDistance ? leftX : rightX;
             no.x = Math.max(20, Math.min(W - no.w - 20, targetX));
-            no.y = H - 180;
+            no.y = W <= 768 ? Math.max(170, H - 260) : H - 180;
 
             const movedDistance = Math.hypot(
               (no.x + no.w / 2) - playerCenterX,
@@ -293,7 +298,7 @@ export default function Game() {
             );
             if (movedDistance < 250) {
               no.x = playerCenterX < W / 2 ? W - no.w - 70 : 70;
-              no.y = H - 180;
+              no.y = W <= 768 ? Math.max(170, H - 260) : H - 180;
             }
           }
         }
@@ -499,98 +504,86 @@ export default function Game() {
           >
             <span className="ml-2 h-0 w-0 border-y-[15px] border-l-[23px] border-y-transparent border-l-white transition-transform duration-200 group-hover:scale-110 md:border-y-[18px] md:border-l-[28px]" />
           </button>
-          <p className="mt-4 font-pixel text-[9px] uppercase tracking-[0.22em] text-[#8b0000]/75 md:text-[10px]">
-            press play to begin
+          <p className="mt-4 font-pixel text-[7px] uppercase tracking-[0.2em] text-[#8b0000]/55 md:text-[9px]">
+            tap play when you&apos;re ready
           </p>
-
-          <div className="mt-6 flex flex-col items-center gap-1 text-[#8b0000]/65">
-            <p className="font-pixel text-[7px] uppercase tracking-wider md:text-[8px]">Controls</p>
-            <p className="font-hand text-base md:text-lg">Desktop: ← → or A / D · Jump: Space / W / ↑</p>
-            <p className="font-hand text-sm md:text-base">Mobile: use the on-screen controls</p>
-          </div>
         </main>
       </div>
     );
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-background select-none">
-      <canvas ref={canvasRef} className="absolute inset-0 z-0 block h-full w-full" style={{ imageRendering: 'pixelated' }} />
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#f7c4c9] select-none">
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-      <button onClick={handleMute} className="absolute top-4 left-4 z-20 bg-valentine-red/80 backdrop-blur-sm text-primary-foreground font-pixel text-xs px-4 py-3 rounded-full border-2 border-valentine-gold hover:scale-110 transition-all shadow-lg">
-        {muted ? '🔇' : '🔊'}
-      </button>
-
-      <div className="absolute top-4 right-4 z-20 bg-valentine-red/80 backdrop-blur-sm text-primary-foreground font-pixel text-xs px-4 py-3 rounded-full border-2 border-valentine-gold shadow-lg">
-        {stage === 'stage3' && `Stage 1: Q${currentQ + 1}/6`}
-        {stage === 'stage2' && 'Stage 2: Your Answer'}
-        {stage === 'stage4' && 'Stage 3: Catch the Letter'}
+      <div className="pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 text-center md:top-5">
+        <div className="font-pixel text-2xl font-bold text-[#d81b48] drop-shadow-[2px_2px_0_#fff] md:text-4xl">Love Quest</div>
       </div>
 
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 z-10 pointer-events-none flex flex-col items-center gap-4 w-full px-4">
-        <h1 className="font-pixel text-valentine-red text-2xl md:text-3xl drop-shadow-lg animate-bounce">💕 Love Quest 💕</h1>
-
-        {stage === 'stage2' && (
-          <div className="bg-valentine-red/90 backdrop-blur-sm px-8 py-4 rounded-xl border-4 border-valentine-gold shadow-2xl relative overflow-hidden group">
-            <div className="absolute -top-2 -right-2 text-xl animate-pulse">✨</div>
-            <div className="absolute -bottom-2 -left-2 text-xl animate-pulse">✨</div>
-            <p className="font-pixel text-white text-xs md:text-sm text-center leading-relaxed">
-              Are you ready for this<br />
-              <span className="text-valentine-gold text-lg md:text-xl">date?</span>
-            </p>
-          </div>
-        )}
-
-        {stage === 'stage3' && (
-          <div className="bg-valentine-red/80 backdrop-blur-sm px-5 py-2 rounded-full border-2 border-valentine-pink shadow-md">
-            <p className="font-pixel text-white text-[9px] md:text-[10px]">Reach the ❓ blocks! ({answeredQsRef.current.size}/6)</p>
-          </div>
-        )}
-
-        {stage === 'stage4' && (
-          <div className="bg-white/90 px-4 py-2 rounded-full border-2 border-valentine-red shadow-md animate-pulse">
-            <span className="text-valentine-red font-pixel text-[8px] md:text-[10px]">DON'T LET IT ESCAPE!</span>
-          </div>
-        )}
+      <div className="absolute left-4 top-4 z-30 flex items-center gap-2 md:left-6 md:top-6">
+        <button onClick={handleMute} className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#ffd21f] bg-[#e62a51] text-lg shadow-[0_4px_0_#a81735] active:translate-y-1 md:h-14 md:w-14">
+          {muted ? '🔇' : '🔊'}
+        </button>
       </div>
 
-      {activeQuestion !== null && <QuestionPopup questionIndex={activeQuestion} onAnswer={handleAnswer} />}
-
-      <div
-        className="fixed bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-3 md:hidden"
-        style={{ bottom: 'calc(16px + env(safe-area-inset-bottom))', touchAction: 'none' }}
-      >
-        <button
-          type="button"
-          aria-label="Move left"
-          className="bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95 shadow-lg"
-          style={{ touchAction: 'none' }}
-          onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); touchRef.current.left = true; }}
-          onPointerUp={(e) => { e.preventDefault(); touchRef.current.left = false; }}
-          onPointerCancel={() => { touchRef.current.left = false; }}
-          onPointerLeave={() => { touchRef.current.left = false; }}
-        >←</button>
-        <button
-          type="button"
-          aria-label="Jump"
-          className="bg-valentine-gold text-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95 shadow-lg"
-          style={{ touchAction: 'none' }}
-          onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); touchRef.current.jump = true; }}
-          onPointerUp={(e) => { e.preventDefault(); touchRef.current.jump = false; }}
-          onPointerCancel={() => { touchRef.current.jump = false; }}
-          onPointerLeave={() => { touchRef.current.jump = false; }}
-        >▲</button>
-        <button
-          type="button"
-          aria-label="Move right"
-          className="bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95 shadow-lg"
-          style={{ touchAction: 'none' }}
-          onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); touchRef.current.right = true; }}
-          onPointerUp={(e) => { e.preventDefault(); touchRef.current.right = false; }}
-          onPointerCancel={() => { touchRef.current.right = false; }}
-          onPointerLeave={() => { touchRef.current.right = false; }}
-        >→</button>
+      <div className="absolute right-4 top-4 z-30 rounded-full border-2 border-[#ffd21f] bg-[#e62a51] px-5 py-3 font-pixel text-xs text-white shadow-[0_4px_0_#a81735] md:right-6 md:top-6 md:px-7 md:py-4 md:text-sm">
+        Stage {stage === 'stage3' ? `1: Q.${currentQ + 1}/6` : stage === 'stage2' ? '2: Your Answer' : '3: Final Run'}
       </div>
+
+      {stage === 'stage3' && (
+        <div className="pointer-events-none absolute left-1/2 top-20 z-20 -translate-x-1/2 rounded-full bg-[#e62a51] px-6 py-3 font-pixel text-[10px] text-white shadow-[0_4px_0_#a81735] md:top-24 md:px-8 md:py-3 md:text-xs">
+          Reach the ? blocks! ({answers.length}/6)
+        </div>
+      )}
+
+      {stage === 'stage2' && (
+        <div className="pointer-events-none absolute left-1/2 top-32 z-20 w-[min(90vw,680px)] -translate-x-1/2 rounded-2xl border-4 border-[#ffd21f] bg-[#e62a51] px-6 py-4 text-center font-pixel text-sm leading-relaxed text-white shadow-[0_7px_0_rgba(160,25,55,0.25)] md:top-36 md:px-10 md:py-5 md:text-lg">
+          Are you ready for this <span className="text-[#ffd21f]">date?</span>
+        </div>
+      )}
+
+      {stage === 'stage2' && (
+        <div className="pointer-events-none absolute bottom-16 left-1/2 z-40 flex -translate-x-1/2 items-end gap-4 md:bottom-8">
+          <button
+            className="pointer-events-auto h-16 w-20 rounded-xl border-2 border-[#ff1493] bg-[#ff1493] text-2xl text-white shadow-[0_5px_0_#b00f63] active:translate-y-1 md:h-20 md:w-24"
+            onPointerDown={() => { touchRef.current.left = true; }}
+            onPointerUp={() => { touchRef.current.left = false; }}
+            onPointerCancel={() => { touchRef.current.left = false; }}
+            onPointerLeave={() => { touchRef.current.left = false; }}
+          >←</button>
+          <button
+            className="pointer-events-auto h-16 w-20 rounded-xl border-2 border-[#ffd21f] bg-[#ffd21f] text-2xl text-[#8b0000] shadow-[0_5px_0_#b89a00] active:translate-y-1 md:h-20 md:w-24"
+            onPointerDown={() => { touchRef.current.jump = true; }}
+            onPointerUp={() => { touchRef.current.jump = false; }}
+            onPointerCancel={() => { touchRef.current.jump = false; }}
+            onPointerLeave={() => { touchRef.current.jump = false; }}
+          >▲</button>
+          <button
+            className="pointer-events-auto h-16 w-20 rounded-xl border-2 border-[#ff1493] bg-[#ff1493] text-2xl text-white shadow-[0_5px_0_#b00f63] active:translate-y-1 md:h-20 md:w-24"
+            onPointerDown={() => { touchRef.current.right = true; }}
+            onPointerUp={() => { touchRef.current.right = false; }}
+            onPointerCancel={() => { touchRef.current.right = false; }}
+            onPointerLeave={() => { touchRef.current.right = false; }}
+          >→</button>
+        </div>
+      )}
+
+      {stage !== 'stage2' && (
+        <div className="pointer-events-none absolute bottom-5 left-1/2 z-20 -translate-x-1/2 font-pixel text-[7px] text-[#8b0000]/60 md:bottom-6 md:text-[9px]">
+          ← → or A/D move&nbsp;&nbsp; Double SPACE/W jump
+        </div>
+      )}
+
+      {activeQuestion !== null && (
+        <QuestionPopup
+          questionIndex={activeQuestion}
+          onAnswer={handleAnswer}
+        />
+      )}
+
+      {stage !== 'stage2' && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-[#ff69b4]/30" />
+      )}
     </div>
   );
 }
