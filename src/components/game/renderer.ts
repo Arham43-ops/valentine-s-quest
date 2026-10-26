@@ -17,22 +17,12 @@ export function drawPixelHeart(ctx: CanvasRenderingContext2D, cx: number, cy: nu
   ctx.fillStyle = color;
   const s = size / 8;
   const rows = [
-    [0, 1, 1, 0, 0, 1, 1, 0],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [0, 0, 1, 1, 1, 1, 0, 0],
-    [0, 0, 0, 1, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 0, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1], [0, 1, 1, 1, 1, 1, 1, 0], [0, 0, 1, 1, 1, 1, 0, 0], [0, 0, 0, 1, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0],
   ];
   const ox = cx - size / 2;
   const oy = cy - size / 2;
-  rows.forEach((row, ry) => {
-    row.forEach((v, rx) => {
-      if (v) ctx.fillRect(ox + rx * s, oy + ry * s, s + 0.5, s + 0.5);
-    });
-  });
+  rows.forEach((row, ry) => row.forEach((v, rx) => { if (v) ctx.fillRect(ox + rx * s, oy + ry * s, s + 0.5, s + 0.5); }));
 }
 
 export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, frame: number) {
@@ -54,7 +44,8 @@ export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, frame: numb
 
 export function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform) {
   const col = p.color || '#FF69B4';
-  const renderY = p.type === 'no' ? ctx.canvas.height - 180 : p.y;
+  const mobile = ctx.canvas.width < 768;
+  const renderY = p.type === 'no' ? (mobile ? ctx.canvas.height - 270 : ctx.canvas.height - 180) : p.y;
   ctx.fillStyle = col;
   ctx.fillRect(p.x, renderY, p.w, p.h);
   ctx.fillStyle = 'rgba(255,255,255,0.3)';
@@ -63,9 +54,7 @@ export function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform) {
   ctx.fillRect(p.x, renderY + p.h - 4, p.w, 4);
   if (p.w > 40) {
     const hearts = Math.floor(p.w / 40);
-    for (let i = 0; i < hearts; i++) {
-      drawPixelHeart(ctx, p.x + 20 + i * 40, renderY + p.h / 2, 12, 'rgba(255,255,255,0.25)');
-    }
+    for (let i = 0; i < hearts; i++) drawPixelHeart(ctx, p.x + 20 + i * 40, renderY + p.h / 2, 12, 'rgba(255,255,255,0.25)');
   }
   if (p.label) {
     ctx.fillStyle = '#fff';
@@ -77,12 +66,13 @@ export function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform) {
 }
 
 export function drawGround(ctx: CanvasRenderingContext2D, cameraX: number, canvasW: number, canvasH: number) {
-  const groundY = canvasH - 40;
-  const startX = Math.floor((cameraX) / 40) * 40;
+  const mobile = canvasW < 768;
+  const groundY = canvasH - (mobile ? 150 : 40);
+  const startX = Math.floor(cameraX / 40) * 40;
   for (let gx = startX - 40; gx < cameraX + canvasW + 40; gx += 40) {
-    const shade = (Math.abs(gx / 40) % 2 === 0) ? '#FF69B4' : '#FF85C8';
+    const shade = Math.abs(gx / 40) % 2 === 0 ? '#FF69B4' : '#FF85C8';
     ctx.fillStyle = shade;
-    ctx.fillRect(gx - cameraX, groundY, 40, 40);
+    ctx.fillRect(gx - cameraX, groundY, 40, mobile ? 150 : 40);
     drawPixelHeart(ctx, gx - cameraX + 20, groundY + 20, 10, 'rgba(255,255,255,0.15)');
   }
   ctx.fillStyle = '#DC143C';
