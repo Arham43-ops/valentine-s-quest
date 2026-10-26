@@ -41,7 +41,6 @@ export default defineConfig(() => ({
     });`,
           );
 
-          // Keep the player and gameplay surface above the mobile controller area.
           transformed = transformed.replace(
             /const mobileGame = W < 768;\n\s*const groundOffset = mobileGame \? \d+ : 40;/,
             `const mobileGame = W < 768;\n    const groundOffset = mobileGame ? 150 : 40;`,
@@ -51,7 +50,6 @@ export default defineConfig(() => ({
             `const groundY = H - (W < 768 ? 150 : 40) - p.h;`,
           );
 
-          // Rebuild the platform generators for short phone viewports. Desktop is unchanged.
           transformed = transformed.replace(
             /function getQuestionPlatforms\(H: number\): Platform\[\] \{[\s\S]*?\n\}\n\nfunction getAnswerPlatforms/,
             `function getQuestionPlatforms(H: number): Platform[] {
@@ -65,17 +63,7 @@ export default defineConfig(() => ({
     if (q > 0) {
       platforms.push({ x: baseX - spacing / 2 - 40, y: connectorY, w: 80, h: 20, color: '#FF69B4' });
     }
-    platforms.push({
-      x: baseX,
-      y: questionY,
-      w: 60,
-      h: 40,
-      color: '#FFD700',
-      type: 'checkpoint',
-      label: '?',
-      questionIndex: q,
-      active: q === 0,
-    });
+    platforms.push({ x: baseX, y: questionY, w: 60, h: 40, color: '#FFD700', type: 'checkpoint', label: '?', questionIndex: q, active: q === 0 });
   }
   return platforms;
 }
@@ -92,7 +80,6 @@ function getAnswerPlatforms`,
   const mobileGame = W < 768;
   const platformY = mobileGame ? H - 300 : H - 180;
   const lowerY = mobileGame ? H - 215 : H - 120;
-
   return [
     { x: noX, y: platformY, w: 140, h: 30, color: '#888', type: 'no', label: 'NO' },
     { x: yesX, y: platformY, w: 140, h: 30, color: '#FF1493', type: 'yes', label: 'YES ♥' },
@@ -121,7 +108,6 @@ function getLetterPlatforms`,
 export default function Game`,
           );
 
-          // The NO platform must use the same lifted mobile height after it runs away.
           transformed = transformed.replace(/no\.y = H - 180;/g, `no.y = W < 768 ? H - 300 : H - 180;`);
 
           transformed = transformed.replace(
@@ -137,14 +123,28 @@ export default function Game`,
             `<div className="absolute top-16 md:top-10 left-1/2 -translate-x-1/2 z-10 pointer-events-none`,
           );
 
-          // Do not rely on Tailwind's md breakpoint for controls. Touch devices always get them.
+          // The same mobile controller is needed in Stage 1, Stage 2, and Stage 3.
           transformed = transformed.replace(
-            `className="fixed bottom-3 left-1/2 z-30 flex -translate-x-1/2 gap-3 md:hidden"`,
-            `className="fixed bottom-3 left-1/2 z-[100] flex -translate-x-1/2 gap-3"`,
+            `{stage === 'stage2' && (\n        <div className="pointer-events-none absolute bottom-16 left-1/2 z-40 flex -translate-x-1/2 items-end gap-4 md:bottom-8">`,
+            `{stage !== 'intro' && stage !== 'loading' && stage !== 'summary' && stage !== 'transition' && (\n        <div className="pointer-events-none fixed bottom-[calc(12px+env(safe-area-inset-bottom))] left-1/2 z-[100] flex -translate-x-1/2 items-end gap-3 md:hidden" style={{ touchAction: 'none' }}>`,
+          );
+
+          transformed = transformed.replace(
+            `onPointerDown={() => { touchRef.current.left = true; }}`,
+            `onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); touchRef.current.left = true; }}`,
           );
           transformed = transformed.replace(
-            /style=\{\{ bottom: 'calc\(16px \+ env\(safe-area-inset-bottom\)\)', touchAction: 'none'(?:, display: [^}]*)? \}\}/,
-            `style={{ bottom: 'calc(12px + env(safe-area-inset-bottom))', touchAction: 'none', display: (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || (typeof window !== 'undefined' && window.innerWidth < 768) ? 'flex' : 'none' }}`,
+            `onPointerDown={() => { touchRef.current.jump = true; }}`,
+            `onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); touchRef.current.jump = true; }}`,
+          );
+          transformed = transformed.replace(
+            `onPointerDown={() => { touchRef.current.right = true; }}`,
+            `onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); touchRef.current.right = true; }}`,
+          );
+
+          transformed = transformed.replace(
+            `className="pointer-events-auto h-16 w-20 rounded-xl`,
+            `className="pointer-events-auto touch-none select-none h-16 w-20 rounded-xl`,
           );
 
           return transformed;
