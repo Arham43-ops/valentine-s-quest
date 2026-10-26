@@ -37,53 +37,43 @@ function spawnParticles(x: number, y: number, count: number, type: 'heart' | 'sp
 function getQuestionPlatforms(H: number): Platform[] {
   const platforms: Platform[] = [];
   const spacing = 350;
+  const mobileGame = typeof window !== 'undefined' && window.innerWidth < 768;
+  const questionY = mobileGame ? H - 240 : H - 160;
+  const connectorY = mobileGame ? H - 185 : H - 140;
   for (let q = 0; q < QUESTIONS.length; q++) {
     const baseX = 250 + q * spacing;
     if (q > 0) {
-      platforms.push({ x: baseX - spacing / 2 - 40, y: H - 140, w: 80, h: 20, color: '#FF69B4' });
+      platforms.push({ x: baseX - spacing / 2 - 40, y: connectorY, w: 80, h: 20, color: '#FF69B4' });
     }
-    platforms.push({
-      x: baseX,
-      y: H - 160,
-      w: 60,
-      h: 40,
-      color: '#FFD700',
-      type: 'checkpoint',
-      label: '?',
-      questionIndex: q,
-      active: q === 0,
-    });
+    platforms.push({ x: baseX, y: questionY, w: 60, h: 40, color: '#FFD700', type: 'checkpoint', label: '?', questionIndex: q, active: q === 0 });
   }
   return platforms;
 }
 
 function getAnswerPlatforms(H: number, W: number): Platform[] {
   const centerX = W / 2;
-  const isMobile = W <= 768;
-
-  // On short mobile screens, keep the YES/NO platforms visibly above the
-  // ground instead of compressing every platform into the bottom strip.
-  // The lower support platforms remain reachable and create two clear levels.
-  const platformY = isMobile ? Math.max(170, H - 260) : H - 180;
-  const lowerY = isMobile ? Math.max(260, H - 150) : H - 120;
-  const noX = isMobile ? 36 : Math.max(30, centerX - 340);
-  const yesX = isMobile ? Math.max(180, W - 180) : Math.min(W - 170, centerX + 170);
-
+  const mobileGame = W < 768;
+  const platformY = mobileGame ? H - 270 : H - 180;
+  const lowerY = mobileGame ? H - 205 : H - 120;
+  const noX = mobileGame ? 22 : Math.max(30, centerX - 340);
+  const yesX = mobileGame ? Math.max(145, W - 162) : Math.min(W - 170, centerX + 170);
   return [
-    { x: noX, y: platformY, w: 140, h: 30, color: '#888', type: 'no', label: 'NO' },
-    { x: yesX, y: platformY, w: 140, h: 30, color: '#FF1493', type: 'yes', label: 'YES ♥' },
-    { x: noX - (isMobile ? 4 : 40), y: lowerY, w: isMobile ? 150 : 220, h: 20, color: '#FF69B4' },
-    { x: yesX - (isMobile ? 4 : 40), y: lowerY, w: isMobile ? 150 : 220, h: 20, color: '#FF69B4' },
+    { x: noX, y: platformY, w: mobileGame ? 118 : 140, h: 30, color: '#888', type: 'no', label: 'NO' },
+    { x: yesX, y: platformY, w: mobileGame ? 118 : 140, h: 30, color: '#FF1493', type: 'yes', label: 'YES ♥' },
+    { x: noX - 4, y: lowerY, w: mobileGame ? 126 : 220, h: 20, color: '#FF69B4' },
+    { x: yesX - 4, y: lowerY, w: mobileGame ? 126 : 220, h: 20, color: '#FF69B4' },
   ];
 }
 
 function getLetterPlatforms(H: number): Platform[] {
   const platforms: Platform[] = [];
   const spacing = 320;
+  const mobileGame = typeof window !== 'undefined' && window.innerWidth < 768;
+  const baseY = mobileGame ? H - 245 : H - 150;
   for (let i = 0; i < 11; i++) {
-    platforms.push({ x: 200 + i * spacing, y: H - 150 - Math.sin(i * 0.5) * 120, w: 120, h: 20, color: '#FF69B4' });
+    platforms.push({ x: 200 + i * spacing, y: baseY - Math.sin(i * 0.5) * (mobileGame ? 70 : 120), w: 120, h: 20, color: '#FF69B4' });
   }
-  platforms.push({ x: 650, y: H - 160, w: 32, h: 24, type: 'letter' });
+  platforms.push({ x: 650, y: mobileGame ? H - 255 : H - 160, w: 32, h: 24, type: 'letter' });
   return platforms;
 }
 
@@ -128,8 +118,10 @@ export default function Game() {
     const p = playerRef.current;
     const W = canvasRef.current?.width || window.innerWidth;
     const H = canvasRef.current?.height || window.innerHeight;
+    const mobileGame = W < 768;
+    const groundOffset = mobileGame ? 150 : 40;
     p.x = s === 'stage2' ? Math.max(0, W / 2 - p.w / 2) : 60;
-    p.y = s === 'stage2' ? H - 40 - p.h : 300;
+    p.y = s === 'stage2' ? H - groundOffset - p.h : 300;
     p.vx = 0; p.vy = 0; p.onGround = s === 'stage2'; p.jumps = 0;
     cameraXRef.current = 0;
     particlesRef.current = [];
@@ -168,6 +160,9 @@ export default function Game() {
     setAnswers(prev => {
       const next = [...prev, fullAnswer];
       answersRef.current = next;
+      if (questionIndex === QUESTIONS.length - 1) {
+        void fetch('/api/submit-answers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ answers: next }), keepalive: true }).catch(() => {});
+      }
       return next;
     });
     setActiveQuestion(null);
@@ -180,9 +175,7 @@ export default function Game() {
       const nextQ = questionIndex + 1;
       setCurrentQ(nextQ);
       currentQRef.current = nextQ;
-      platformsRef.current.forEach(p => {
-        if (p.questionIndex === nextQ) p.active = true;
-      });
+      platformsRef.current.forEach(p => { if (p.questionIndex === nextQ) p.active = true; });
     }
   }, [initStage]);
 
@@ -225,7 +218,6 @@ export default function Game() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
     let animId: number;
-
     audioManager.init();
 
     const loop = () => {
@@ -237,7 +229,6 @@ export default function Game() {
       const keys = keysRef.current;
       const touch = touchRef.current;
       const currentStage = stageRef.current;
-
       if (currentStage === 'loading' || currentStage === 'intro' || currentStage === 'summary' || currentStage === 'transition') return;
 
       if (!gamePausedRef.current) {
@@ -246,94 +237,54 @@ export default function Game() {
         const jump = keys.has(' ') || keys.has('w') || keys.has('arrowup') || touch.jump;
         p.vx = right ? MOVE_SPEED : left ? -MOVE_SPEED : 0;
         if (p.vx !== 0) p.facing = p.vx > 0 ? 1 : -1;
-
         if (jump) {
-          if (p.onGround) {
-            p.vy = JUMP_FORCE; p.onGround = false; p.jumps = 1; audioManager.playJump();
-          } else if (p.jumps === 1 && Math.abs(p.vy) < 2) {
-            p.vy = JUMP_FORCE * 0.8; p.jumps = 2; audioManager.playJump();
-            particlesRef.current.push(...spawnParticles(p.x + p.w / 2, p.y + p.h, 5, 'sparkle'));
-          }
+          if (p.onGround) { p.vy = JUMP_FORCE; p.onGround = false; p.jumps = 1; audioManager.playJump(); }
+          else if (p.jumps === 1 && Math.abs(p.vy) < 2) { p.vy = JUMP_FORCE * 0.8; p.jumps = 2; audioManager.playJump(); particlesRef.current.push(...spawnParticles(p.x + p.w / 2, p.y + p.h, 5, 'sparkle')); }
         }
-
         p.vy += GRAVITY;
         p.x += p.vx;
         p.y += p.vy;
         if (p.x < 0) p.x = 0;
         if (currentStage === 'stage2' && p.x > W - p.w) p.x = W - p.w;
-
-        const groundY = H - 40 - p.h;
-        if (p.y >= groundY) {
-          p.y = groundY; p.vy = 0; p.onGround = true; p.jumps = 0;
-        }
+        const groundY = H - (W < 768 ? 150 : 40) - p.h;
+        if (p.y >= groundY) { p.y = groundY; p.vy = 0; p.onGround = true; p.jumps = 0; }
         p.onGround = p.y >= groundY;
 
-        if (currentStage === 'stage2') {
-          noPlatRef.current = platformsRef.current.find(pl => pl.type === 'no') || null;
-        }
-
+        if (currentStage === 'stage2') noPlatRef.current = platformsRef.current.find(pl => pl.type === 'no') || null;
         if (currentStage === 'stage2' && noPlatRef.current) {
           const no = noPlatRef.current;
           const playerCenterX = p.x + p.w / 2;
           const playerCenterY = p.y + p.h / 2;
           const noCenterX = no.x + no.w / 2;
           const noCenterY = no.y + no.h / 2;
-          const dx = noCenterX - playerCenterX;
-          const dy = noCenterY - playerCenterY;
-          const dist = Math.hypot(dx, dy);
-
-          if (dist < 250) {
+          if (Math.hypot(noCenterX - playerCenterX, noCenterY - playerCenterY) < 250) {
             audioManager.playNoRunAway();
             const leftX = 70;
             const rightX = W - no.w - 70;
             const leftDistance = Math.abs((leftX + no.w / 2) - playerCenterX);
             const rightDistance = Math.abs((rightX + no.w / 2) - playerCenterX);
-            const targetX = leftDistance > rightDistance ? leftX : rightX;
-            no.x = Math.max(20, Math.min(W - no.w - 20, targetX));
-            no.y = W <= 768 ? Math.max(170, H - 260) : H - 180;
-
-            const movedDistance = Math.hypot(
-              (no.x + no.w / 2) - playerCenterX,
-              (no.y + no.h / 2) - playerCenterY
-            );
-            if (movedDistance < 250) {
-              no.x = playerCenterX < W / 2 ? W - no.w - 70 : 70;
-              no.y = W <= 768 ? Math.max(170, H - 260) : H - 180;
-            }
+            no.x = Math.max(20, Math.min(W - no.w - 20, leftDistance > rightDistance ? leftX : rightX));
+            no.y = W < 768 ? H - 270 : H - 180;
+            if (Math.hypot((no.x + no.w / 2) - playerCenterX, (no.y + no.h / 2) - playerCenterY) < 250) no.x = playerCenterX < W / 2 ? W - no.w - 70 : 70;
           }
         }
 
         for (const pl of platformsRef.current) {
           if (currentStage === 'stage2' && pl.type === 'no') continue;
-
           if (p.x + p.w > pl.x && p.x < pl.x + pl.w && p.y + p.h >= pl.y && p.y + p.h <= pl.y + pl.h + 8 && p.vy >= 0) {
             p.y = pl.y - p.h; p.vy = 0; p.onGround = true; p.jumps = 0;
-
             if (currentStage === 'stage3' && pl.type === 'checkpoint' && pl.questionIndex !== undefined) {
               const qi = pl.questionIndex;
               if (qi === currentQRef.current && !answeredQsRef.current.has(qi) && activeQuestionRef.current === null) {
-                audioManager.playCollect();
-                particlesRef.current.push(...spawnParticles(pl.x + pl.w / 2, pl.y, 10));
-                setActiveQuestion(qi);
+                audioManager.playCollect(); particlesRef.current.push(...spawnParticles(pl.x + pl.w / 2, pl.y, 10)); setActiveQuestion(qi);
               }
             }
-
             if (currentStage === 'stage2' && pl.type === 'yes') {
-              audioManager.playSuccess();
-              setCelebration(true);
-              particlesRef.current.push(...spawnParticles(pl.x + pl.w / 2, pl.y, 30));
-              setTimeout(() => { setCelebration(false); initStage('stage4'); }, 1500);
+              audioManager.playSuccess(); setCelebration(true); particlesRef.current.push(...spawnParticles(pl.x + pl.w / 2, pl.y, 30)); setTimeout(() => { setCelebration(false); initStage('stage4'); }, 1500);
             }
-
             if (currentStage === 'stage4' && pl.type === 'letter' && !finalTransitionRef.current) {
-              finalTransitionRef.current = true;
-              audioManager.playRomanticFinale();
-              particlesRef.current.push(...spawnParticles(pl.x + pl.w / 2, pl.y, 100));
-              setCelebration(true);
-              setTimeout(() => {
-                setCelebration(false);
-                setStage('transition');
-              }, 1500);
+              finalTransitionRef.current = true; audioManager.playRomanticFinale(); particlesRef.current.push(...spawnParticles(pl.x + pl.w / 2, pl.y, 100)); setCelebration(true);
+              setTimeout(() => { setCelebration(false); setStage('transition'); }, 1500);
             }
           }
         }
@@ -342,248 +293,93 @@ export default function Game() {
       const targetCam = currentStage === 'stage2' ? 0 : p.x - W / 3;
       cameraXRef.current += (targetCam - cameraXRef.current) * 0.08;
       if (cameraXRef.current < 0) cameraXRef.current = 0;
-
-      particlesRef.current = particlesRef.current.filter(pp => {
-        pp.x += pp.vx; pp.y += pp.vy; pp.vy += 0.1; pp.life--; return pp.life > 0;
-      });
-      cloudsRef.current.forEach(c => {
-        c.x += c.speed;
-        if (c.x > cameraXRef.current + W + 100) c.x = cameraXRef.current - 100;
-      });
+      particlesRef.current = particlesRef.current.filter(pp => { pp.x += pp.vx; pp.y += pp.vy; pp.vy += 0.1; pp.life--; return pp.life > 0; });
+      cloudsRef.current.forEach(c => { c.x += c.speed; if (c.x > cameraXRef.current + W + 100) c.x = cameraXRef.current - 100; });
 
       drawBackground(ctx, W, H);
       cloudsRef.current.forEach(c => drawCloud(ctx, { ...c, x: c.x - cameraXRef.current * 0.3 }));
       drawGround(ctx, cameraXRef.current, W, H);
-
       platformsRef.current.forEach(pl => {
-        if (pl.type === 'letter') {
-          drawLetter(ctx, pl.x - cameraXRef.current, pl.y, frameRef.current);
-          return;
-        }
+        if (pl.type === 'letter') { drawLetter(ctx, pl.x - cameraXRef.current, pl.y, frameRef.current); return; }
         const renderPl = { ...pl, x: pl.x - cameraXRef.current };
-        if (stageRef.current === 'stage3' && pl.questionIndex !== undefined) {
-          ctx.globalAlpha = answeredQsRef.current.has(pl.questionIndex) ? 0.4 : pl.questionIndex > currentQRef.current ? 0.3 : 1;
-        }
-        drawPlatform(ctx, renderPl);
-        ctx.globalAlpha = 1;
-
+        if (stageRef.current === 'stage3' && pl.questionIndex !== undefined) ctx.globalAlpha = answeredQsRef.current.has(pl.questionIndex) ? 0.4 : pl.questionIndex > currentQRef.current ? 0.3 : 1;
+        drawPlatform(ctx, renderPl); ctx.globalAlpha = 1;
         if (stageRef.current === 'stage3' && pl.questionIndex !== undefined) {
           const qx = renderPl.x + renderPl.w / 2;
-          const qy = renderPl.y + renderPl.h / 2;
           const bounce = pl.questionIndex === currentQRef.current && !answeredQsRef.current.has(pl.questionIndex) ? Math.sin(frameRef.current * 0.1) * 3 : 0;
-          ctx.fillStyle = '#8B0000';
-          ctx.font = 'bold 18px "Press Start 2P", cursive';
-          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillText('?', qx, qy + bounce);
-          ctx.textBaseline = 'alphabetic';
-          if (pl.questionIndex === currentQRef.current && !answeredQsRef.current.has(pl.questionIndex)) {
-            ctx.font = '7px "Press Start 2P", cursive';
-            ctx.fillText('Jump here!', qx, renderPl.y - 8);
-          }
+          ctx.fillStyle = '#8B0000'; ctx.font = 'bold 18px "Press Start 2P", cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', qx, renderPl.y + renderPl.h / 2 + bounce); ctx.textBaseline = 'alphabetic';
+          if (pl.questionIndex === currentQRef.current && !answeredQsRef.current.has(pl.questionIndex)) { ctx.font = '7px "Press Start 2P", cursive'; ctx.fillText('Jump here!', qx, renderPl.y - 8); }
           ctx.textAlign = 'left';
         }
-
-        if (stageRef.current === 'stage2' && pl.type === 'yes') {
-          ctx.fillStyle = '#fff'; ctx.font = '8px "Press Start 2P", cursive'; ctx.textAlign = 'center';
-          ctx.fillText('Touch me!', renderPl.x + renderPl.w / 2, renderPl.y - 10); ctx.textAlign = 'left';
-        }
-        if (stageRef.current === 'stage2' && pl.type === 'no') {
-          ctx.fillStyle = '#666'; ctx.font = '7px "Press Start 2P", cursive'; ctx.textAlign = 'center';
-          ctx.fillText("Can't touch this!", renderPl.x + renderPl.w / 2, renderPl.y - 10); ctx.textAlign = 'left';
-        }
+        if (stageRef.current === 'stage2' && pl.type === 'yes') { ctx.fillStyle = '#fff'; ctx.font = '8px "Press Start 2P", cursive'; ctx.textAlign = 'center'; ctx.fillText('Touch me!', renderPl.x + renderPl.w / 2, renderPl.y - 10); ctx.textAlign = 'left'; }
+        if (stageRef.current === 'stage2' && pl.type === 'no') { ctx.fillStyle = '#666'; ctx.font = '7px "Press Start 2P", cursive'; ctx.textAlign = 'center'; ctx.fillText("Can't touch this!", renderPl.x + renderPl.w / 2, renderPl.y - 10); ctx.textAlign = 'left'; }
       });
-
       drawPlayer(ctx, { ...p, x: p.x - cameraXRef.current }, frameRef.current);
       particlesRef.current.forEach(pp => drawParticle(ctx, { ...pp, x: pp.x - cameraXRef.current }));
-
-      if (celebrationRef.current) {
-        ctx.fillStyle = 'rgba(255,20,147,0.3)'; ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = '#fff'; ctx.font = '16px "Press Start 2P", cursive'; ctx.textAlign = 'center';
-        ctx.fillText('YES! ♥♥♥', W / 2, H / 2); ctx.textAlign = 'left';
-        if (frameRef.current % 5 === 0) particlesRef.current.push(...spawnParticles(Math.random() * W, Math.random() * H, 3));
-      }
-      if (gamePausedRef.current) {
-        ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0, 0, W, H);
-      }
-      ctx.fillStyle = 'rgba(139,0,0,0.6)'; ctx.font = '7px "Press Start 2P", cursive';
-      ctx.fillText('← → or A/D move  Double SPACE/W jump', 10, H - 10);
+      if (celebrationRef.current) { ctx.fillStyle = 'rgba(255,20,147,0.3)'; ctx.fillRect(0, 0, W, H); ctx.fillStyle = '#fff'; ctx.font = '16px "Press Start 2P", cursive'; ctx.textAlign = 'center'; ctx.fillText('YES! ♥♥♥', W / 2, H / 2); ctx.textAlign = 'left'; if (frameRef.current % 5 === 0) particlesRef.current.push(...spawnParticles(Math.random() * W, Math.random() * H, 3)); }
+      if (gamePausedRef.current) { ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0, 0, W, H); }
     };
-
     animId = requestAnimationFrame(loop);
     return () => { cancelAnimationFrame(animId); audioManager.stopBgMusic(); };
-  }, [initStage, stage === 'summary']);
+  }, [initStage, stage === 'stage2' || stage === 'stage3' || stage === 'stage4']);
 
   const handleMute = () => { audioManager.init(); setMuted(audioManager.toggleMute()); };
+  const handleRestart = () => { setReplayMode(true); setAnswers([]); answersRef.current = []; setCurrentQ(0); currentQRef.current = 0; setActiveQuestion(null); activeQuestionRef.current = null; setCelebration(false); celebrationRef.current = false; frameRef.current = 0; finalTransitionRef.current = false; initStage('stage3'); };
 
-  const handleRestart = () => {
-    setReplayMode(true);
-    setAnswers([]); answersRef.current = []; setCurrentQ(0); currentQRef.current = 0;
-    setActiveQuestion(null); activeQuestionRef.current = null; setCelebration(false); celebrationRef.current = false;
-    frameRef.current = 0; finalTransitionRef.current = false; initStage('stage3');
-  };
+  const setTouch = (key: 'left' | 'right' | 'jump', value: boolean) => { touchRef.current[key] = value; };
+  const touchButton = (key: 'left' | 'right' | 'jump', label: string, className: string) => (
+    <button
+      type="button"
+      aria-label={key === 'left' ? 'Move left' : key === 'right' ? 'Move right' : 'Jump'}
+      className={`pointer-events-auto touch-none select-none ${className}`}
+      style={{ width: 'clamp(64px, 18vw, 78px)', height: 'clamp(56px, 15vw, 68px)', borderRadius: '18px', fontSize: '28px', lineHeight: 1, WebkitTapHighlightColor: 'transparent', boxShadow: key === 'jump' ? '0 6px 0 #b89a00, 0 10px 18px rgba(120,40,55,.22)' : '0 6px 0 #b00f63, 0 10px 18px rgba(120,40,55,.22)' }}
+      onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); setTouch(key, true); }}
+      onPointerUp={(e) => { e.preventDefault(); setTouch(key, false); }}
+      onPointerCancel={() => setTouch(key, false)}
+      onPointerLeave={() => setTouch(key, false)}
+    >{label}</button>
+  );
 
   if (stage === 'summary') return <SummaryScreen onRestart={handleRestart} />;
+  if (stage === 'transition') return <div className="flex min-h-screen w-full items-center justify-center bg-[#f7c4c9] px-5 py-8 select-none"><div className="relative w-full max-w-2xl overflow-hidden rounded-[24px] border-4 border-valentine-red bg-[#fffdf5] px-7 py-12 text-center shadow-[10px_12px_0_rgba(130,48,61,0.12)] md:px-14 md:py-16"><div className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(175,102,102,0.11)_1px,transparent_1px),linear-gradient(90deg,rgba(175,102,102,0.11)_1px,transparent_1px)] [background-size:27px_27px]" /><div className="relative z-10"><p className="font-pixel text-[9px] uppercase tracking-[0.24em] text-valentine-red/70 md:text-[11px]">{replayMode ? 'you came back for another round' : 'quest complete'}</p><h1 className="mt-5 font-hand text-4xl font-bold leading-tight text-[#a5233d] md:text-6xl">{replayMode ? 'Okay... one last thing.' : 'And now... one last thing.'}</h1><p className="mx-auto mt-6 max-w-lg font-hand text-lg leading-relaxed text-[#7f3c49] md:text-xl">You made it all the way here.<br />There&apos;s one final page I wanted you to see.</p><button onClick={() => setStage('summary')} className="mt-9 rounded-sm border-r-4 border-b-4 border-[#970f22] bg-[#ff6578] px-7 py-4 font-pixel text-xs text-white shadow-[0_5px_0_rgba(110,24,35,0.12)] transition-transform hover:-translate-y-0.5 active:translate-y-0.5 md:px-10 md:text-sm">OPEN THE LAST PAGE →</button></div></div></div>;
+  if (stage === 'intro' || stage === 'loading') return <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#f7c4c9] px-5 py-8 select-none"><div className="pointer-events-none absolute inset-0 opacity-55 [background-image:linear-gradient(rgba(139,0,0,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(139,0,0,0.08)_1px,transparent_1px)] [background-size:32px_32px]" /><div className="pointer-events-none absolute -left-20 top-16 h-56 w-56 rounded-full bg-[#ff8da0]/30 blur-3xl" /><div className="pointer-events-none absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-[#ff69b4]/20 blur-3xl" /><main className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center"><p className="font-pixel text-[8px] uppercase tracking-[0.28em] text-[#8b0000]/65 md:text-[10px]">a little something i made for you</p><h1 className="mt-5 font-pixel text-2xl leading-relaxed text-[#8b0000] drop-shadow-sm md:text-4xl">A Little Date Quest</h1><div className="mt-7 w-full max-w-2xl rounded-[26px] border-4 border-[#a5233d] bg-[#fffdf5]/95 px-6 py-7 shadow-[10px_12px_0_rgba(130,48,61,0.12)] backdrop-blur-sm md:px-12 md:py-9"><p className="font-hand text-xl leading-relaxed text-[#7f3c49] md:text-2xl">I could have just sent you a message, but I wanted to make something a little more memorable.</p><p className="mx-auto mt-4 max-w-xl font-hand text-lg leading-relaxed text-[#8f5260] md:text-xl">This is a tiny game where you get to choose how our imaginary date starts, what we do, and what kind of evening sounds good to you.</p><p className="mt-4 font-hand text-lg font-semibold text-[#a5233d] md:text-xl">There are no right or wrong answers. Just pick what feels like you.</p><div className="mx-auto mt-7 grid max-w-xl gap-3 text-left md:grid-cols-3 md:gap-4"><div className="rounded-xl border-2 border-[#f0a2ad] bg-[#fff6f7] px-4 py-3"><p className="font-pixel text-[8px] text-[#a5233d]">01 · EXPLORE</p><p className="mt-2 font-hand text-base text-[#7f3c49]">Move through the world and find the ? blocks.</p></div><div className="rounded-xl border-2 border-[#f0a2ad] bg-[#fff6f7] px-4 py-3"><p className="font-pixel text-[8px] text-[#a5233d]">02 · ANSWER</p><p className="mt-2 font-hand text-base text-[#7f3c49]">Jump onto each ? and choose your answer.</p></div><div className="rounded-xl border-2 border-[#f0a2ad] bg-[#fff6f7] px-4 py-3"><p className="font-pixel text-[8px] text-[#a5233d]">03 · KEEP GOING</p><p className="mt-2 font-hand text-base text-[#7f3c49]">Follow the next little challenge until the final page.</p></div></div></div><button type="button" aria-label="Start the date quest" onClick={handleStartGame} className="group mt-8 flex h-24 w-24 items-center justify-center rounded-full border-4 border-[#8b0000] bg-[#ff6578] shadow-[0_8px_0_#970f22,0_12px_25px_rgba(130,48,61,0.22)] transition-all duration-200 hover:-translate-y-1 hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#970f22,0_7px_15px_rgba(130,48,61,0.18)] md:h-28 md:w-28"><span className="ml-2 h-0 w-0 border-y-[15px] border-l-[23px] border-y-transparent border-l-white transition-transform duration-200 group-hover:scale-110 md:border-y-[18px] md:border-l-[28px]" /></button><p className="mt-4 font-pixel text-[7px] uppercase tracking-[0.2em] text-[#8b0000]/55 md:text-[9px]">tap play when you&apos;re ready</p></main></div>;
 
-  if (stage === 'transition') {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-[#f7c4c9] px-5 py-8 select-none">
-        <div className="relative w-full max-w-2xl overflow-hidden rounded-[24px] border-4 border-valentine-red bg-[#fffdf5] px-7 py-12 text-center shadow-[10px_12px_0_rgba(130,48,61,0.12)] md:px-14 md:py-16">
-          <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(175,102,102,0.11)_1px,transparent_1px),linear-gradient(90deg,rgba(175,102,102,0.11)_1px,transparent_1px)] [background-size:27px_27px]" />
-          <div className="relative z-10">
-            <p className="font-pixel text-[9px] uppercase tracking-[0.24em] text-valentine-red/70 md:text-[11px]">
-              {replayMode ? 'you came back for another round' : 'quest complete'}
-            </p>
-            <h1 className="mt-5 font-hand text-4xl font-bold leading-tight text-[#a5233d] md:text-6xl">
-              {replayMode ? 'Okay... one last thing.' : 'And now... one last thing.'}
-            </h1>
-            <p className="mx-auto mt-6 max-w-lg font-hand text-lg leading-relaxed text-[#7f3c49] md:text-xl">
-              You made it all the way here.
-              <br />
-              There&apos;s one final page I wanted you to see.
-            </p>
-            <button
-              onClick={() => setStage('summary')}
-              className="mt-9 rounded-sm border-r-4 border-b-4 border-[#970f22] bg-[#ff6578] px-7 py-4 font-pixel text-xs text-white shadow-[0_5px_0_rgba(110,24,35,0.12)] transition-transform hover:-translate-y-0.5 active:translate-y-0.5 md:px-10 md:text-sm"
-            >
-              OPEN THE LAST PAGE →
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (stage === 'intro' || stage === 'loading') {
-    return (
-      <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#f7c4c9] px-5 py-8 select-none">
-        <div className="pointer-events-none absolute inset-0 opacity-55 [background-image:linear-gradient(rgba(139,0,0,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(139,0,0,0.08)_1px,transparent_1px)] [background-size:32px_32px]" />
-        <div className="pointer-events-none absolute -left-20 top-16 h-56 w-56 rounded-full bg-[#ff8da0]/30 blur-3xl" />
-        <div className="pointer-events-none absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-[#ff69b4]/20 blur-3xl" />
-
-        <main className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center">
-          <p className="font-pixel text-[8px] uppercase tracking-[0.28em] text-[#8b0000]/65 md:text-[10px]">
-            a little something i made for you
-          </p>
-
-          <h1 className="mt-5 font-pixel text-2xl leading-relaxed text-[#8b0000] drop-shadow-sm md:text-4xl">
-            A Little Date Quest
-          </h1>
-
-          <div className="mt-7 w-full max-w-2xl rounded-[26px] border-4 border-[#a5233d] bg-[#fffdf5]/95 px-6 py-7 shadow-[10px_12px_0_rgba(130,48,61,0.12)] backdrop-blur-sm md:px-12 md:py-9">
-            <p className="font-hand text-xl leading-relaxed text-[#7f3c49] md:text-2xl">
-              I could have just sent you a message, but I wanted to make something a little more memorable.
-            </p>
-            <p className="mx-auto mt-4 max-w-xl font-hand text-lg leading-relaxed text-[#8f5260] md:text-xl">
-              This is a tiny game where you get to choose how our imaginary date starts, what we do, and what kind of evening sounds good to you.
-            </p>
-            <p className="mt-4 font-hand text-lg font-semibold text-[#a5233d] md:text-xl">
-              There are no right or wrong answers. Just pick what feels like you.
-            </p>
-
-            <div className="mx-auto mt-7 grid max-w-xl gap-3 text-left md:grid-cols-3 md:gap-4">
-              <div className="rounded-xl border-2 border-[#f0a2ad] bg-[#fff6f7] px-4 py-3">
-                <p className="font-pixel text-[8px] text-[#a5233d]">01 · EXPLORE</p>
-                <p className="mt-2 font-hand text-base text-[#7f3c49]">Move through the world and find the ? blocks.</p>
-              </div>
-              <div className="rounded-xl border-2 border-[#f0a2ad] bg-[#fff6f7] px-4 py-3">
-                <p className="font-pixel text-[8px] text-[#a5233d]">02 · ANSWER</p>
-                <p className="mt-2 font-hand text-base text-[#7f3c49]">Jump onto each ? and choose your answer.</p>
-              </div>
-              <div className="rounded-xl border-2 border-[#f0a2ad] bg-[#fff6f7] px-4 py-3">
-                <p className="font-pixel text-[8px] text-[#a5233d]">03 · KEEP GOING</p>
-                <p className="mt-2 font-hand text-base text-[#7f3c49]">Follow the next little challenge until the final page.</p>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            aria-label="Start the date quest"
-            onClick={handleStartGame}
-            className="group mt-8 flex h-24 w-24 items-center justify-center rounded-full border-4 border-[#8b0000] bg-[#ff6578] shadow-[0_8px_0_#970f22,0_12px_25px_rgba(130,48,61,0.22)] transition-all duration-200 hover:-translate-y-1 hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#970f22,0_7px_15px_rgba(130,48,61,0.18)] md:h-28 md:w-28"
-          >
-            <span className="ml-2 h-0 w-0 border-y-[15px] border-l-[23px] border-y-transparent border-l-white transition-transform duration-200 group-hover:scale-110 md:border-y-[18px] md:border-l-[28px]" />
-          </button>
-          <p className="mt-4 font-pixel text-[7px] uppercase tracking-[0.2em] text-[#8b0000]/55 md:text-[9px]">
-            tap play when you&apos;re ready
-          </p>
-        </main>
-      </div>
-    );
-  }
-
+  const playableStage = stage === 'stage2' || stage === 'stage3' || stage === 'stage4';
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#f7c4c9] select-none">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-      <div className="pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 text-center md:top-5">
-        <div className="font-pixel text-2xl font-bold text-[#d81b48] drop-shadow-[2px_2px_0_#fff] md:text-4xl">Love Quest</div>
+      <div className="pointer-events-none absolute left-1/2 top-14 z-20 -translate-x-1/2 text-center sm:top-4 md:top-5">
+        <div className="font-pixel text-xl font-bold text-[#d81b48] drop-shadow-[2px_2px_0_#fff] sm:text-2xl md:text-4xl">Love Quest</div>
       </div>
 
-      <div className="absolute left-4 top-4 z-30 flex items-center gap-2 md:left-6 md:top-6">
-        <button onClick={handleMute} className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#ffd21f] bg-[#e62a51] text-lg shadow-[0_4px_0_#a81735] active:translate-y-1 md:h-14 md:w-14">
-          {muted ? '🔇' : '🔊'}
-        </button>
+      <div className="absolute left-3 top-3 z-30 flex items-center gap-2 sm:left-4 sm:top-4 md:left-6 md:top-6">
+        <button onClick={handleMute} className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#ffd21f] bg-[#e62a51] text-lg shadow-[0_4px_0_#a81735] active:translate-y-1 md:h-14 md:w-14">{muted ? '🔇' : '🔊'}</button>
       </div>
 
-      <div className="absolute right-4 top-4 z-30 rounded-full border-2 border-[#ffd21f] bg-[#e62a51] px-5 py-3 font-pixel text-xs text-white shadow-[0_4px_0_#a81735] md:right-6 md:top-6 md:px-7 md:py-4 md:text-sm">
+      <div className="absolute right-3 top-3 z-30 rounded-full border-2 border-[#ffd21f] bg-[#e62a51] px-4 py-2.5 font-pixel text-[10px] text-white shadow-[0_4px_0_#a81735] sm:right-4 sm:top-4 sm:px-5 sm:py-3 sm:text-xs md:right-6 md:top-6 md:px-7 md:py-4 md:text-sm">
         Stage {stage === 'stage3' ? `1: Q.${currentQ + 1}/6` : stage === 'stage2' ? '2: Your Answer' : '3: Final Run'}
       </div>
 
-      {stage === 'stage3' && (
-        <div className="pointer-events-none absolute left-1/2 top-20 z-20 -translate-x-1/2 rounded-full bg-[#e62a51] px-6 py-3 font-pixel text-[10px] text-white shadow-[0_4px_0_#a81735] md:top-24 md:px-8 md:py-3 md:text-xs">
-          Reach the ? blocks! ({answers.length}/6)
+      {stage === 'stage3' && <div className="pointer-events-none absolute left-1/2 top-[92px] z-20 w-[min(88vw,360px)] -translate-x-1/2 rounded-2xl bg-[#e62a51] px-4 py-3 text-center font-pixel text-[9px] leading-relaxed text-white shadow-[0_5px_0_#a81735] sm:top-24 sm:w-auto sm:rounded-full sm:px-6 sm:text-[10px] md:top-24 md:px-8 md:py-3 md:text-xs">Reach the ? blocks! ({answers.length}/6)</div>}
+      {stage === 'stage2' && <div className="pointer-events-none absolute left-1/2 top-[92px] z-20 w-[min(90vw,680px)] -translate-x-1/2 rounded-2xl border-4 border-[#ffd21f] bg-[#e62a51] px-5 py-3 text-center font-pixel text-[10px] leading-relaxed text-white shadow-[0_7px_0_rgba(160,25,55,0.25)] sm:top-28 sm:px-8 sm:py-4 md:top-36 md:px-10 md:py-5 md:text-lg">Are you ready for this <span className="text-[#ffd21f]">date?</span></div>}
+
+      {playableStage && (
+        <div className="pointer-events-none fixed bottom-[96px] left-1/2 z-40 -translate-x-1/2 font-pixel text-[7px] uppercase tracking-wider text-[#8b0000]/60 md:hidden">
+          MOVE&nbsp;&nbsp;•&nbsp;&nbsp;JUMP
         </div>
       )}
 
-      {stage === 'stage2' && (
-        <div className="pointer-events-none absolute left-1/2 top-32 z-20 w-[min(90vw,680px)] -translate-x-1/2 rounded-2xl border-4 border-[#ffd21f] bg-[#e62a51] px-6 py-4 text-center font-pixel text-sm leading-relaxed text-white shadow-[0_7px_0_rgba(160,25,55,0.25)] md:top-36 md:px-10 md:py-5 md:text-lg">
-          Are you ready for this <span className="text-[#ffd21f]">date?</span>
+      {playableStage && (
+        <div className="pointer-events-none fixed bottom-[16px] left-1/2 z-50 flex -translate-x-1/2 items-end gap-2.5 md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          {touchButton('left', '←', 'border-2 border-[#ff1493] bg-[#ff1493] text-white active:translate-y-1')}
+          {touchButton('jump', '▲', 'border-2 border-[#ffd21f] bg-[#ffd21f] text-[#8b0000] active:translate-y-1')}
+          {touchButton('right', '→', 'border-2 border-[#ff1493] bg-[#ff1493] text-white active:translate-y-1')}
         </div>
       )}
 
-      {stage === 'stage2' && (
-        <div className="pointer-events-none absolute bottom-16 left-1/2 z-40 flex -translate-x-1/2 items-end gap-4 md:bottom-8">
-          <button
-            className="pointer-events-auto h-16 w-20 rounded-xl border-2 border-[#ff1493] bg-[#ff1493] text-2xl text-white shadow-[0_5px_0_#b00f63] active:translate-y-1 md:h-20 md:w-24"
-            onPointerDown={() => { touchRef.current.left = true; }}
-            onPointerUp={() => { touchRef.current.left = false; }}
-            onPointerCancel={() => { touchRef.current.left = false; }}
-            onPointerLeave={() => { touchRef.current.left = false; }}
-          >←</button>
-          <button
-            className="pointer-events-auto h-16 w-20 rounded-xl border-2 border-[#ffd21f] bg-[#ffd21f] text-2xl text-[#8b0000] shadow-[0_5px_0_#b89a00] active:translate-y-1 md:h-20 md:w-24"
-            onPointerDown={() => { touchRef.current.jump = true; }}
-            onPointerUp={() => { touchRef.current.jump = false; }}
-            onPointerCancel={() => { touchRef.current.jump = false; }}
-            onPointerLeave={() => { touchRef.current.jump = false; }}
-          >▲</button>
-          <button
-            className="pointer-events-auto h-16 w-20 rounded-xl border-2 border-[#ff1493] bg-[#ff1493] text-2xl text-white shadow-[0_5px_0_#b00f63] active:translate-y-1 md:h-20 md:w-24"
-            onPointerDown={() => { touchRef.current.right = true; }}
-            onPointerUp={() => { touchRef.current.right = false; }}
-            onPointerCancel={() => { touchRef.current.right = false; }}
-            onPointerLeave={() => { touchRef.current.right = false; }}
-          >→</button>
-        </div>
-      )}
-
-      {stage !== 'stage2' && (
-        <div className="pointer-events-none absolute bottom-5 left-1/2 z-20 -translate-x-1/2 font-pixel text-[7px] text-[#8b0000]/60 md:bottom-6 md:text-[9px]">
-          ← → or A/D move&nbsp;&nbsp; Double SPACE/W jump
-        </div>
-      )}
-
-      {activeQuestion !== null && (
-        <QuestionPopup
-          questionIndex={activeQuestion}
-          onAnswer={handleAnswer}
-        />
-      )}
-
-      {stage !== 'stage2' && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-[#ff69b4]/30" />
-      )}
+      {activeQuestion !== null && <QuestionPopup questionIndex={activeQuestion} onAnswer={handleAnswer} />}
+      {stage !== 'stage2' && <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-[#ff69b4]/30 md:h-10" />}
     </div>
   );
 }
