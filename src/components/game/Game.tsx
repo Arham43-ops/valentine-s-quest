@@ -556,10 +556,40 @@ export default function Game() {
 
       {activeQuestion !== null && <QuestionPopup questionIndex={activeQuestion} onAnswer={handleAnswer} />}
 
-      <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-4 md:hidden">
-        <button className="bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onTouchStart={() => { touchRef.current.left = true; }} onTouchEnd={() => { touchRef.current.left = false; }} onMouseDown={() => { touchRef.current.left = true; }} onMouseUp={() => { touchRef.current.left = false; }}>←</button>
-        <button className="bg-valentine-gold text-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onTouchStart={() => { touchRef.current.jump = true; }} onTouchEnd={() => { touchRef.current.jump = false; }} onMouseDown={() => { touchRef.current.jump = true; }} onMouseUp={() => { touchRef.current.jump = false; }}>▲</button>
-        <button className="bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95" onTouchStart={() => { touchRef.current.right = true; }} onTouchEnd={() => { touchRef.current.right = false; }} onMouseDown={() => { touchRef.current.right = true; }} onMouseUp={() => { touchRef.current.right = false; }}>→</button>
+      <div
+        className="fixed bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-3 md:hidden"
+        style={{ bottom: 'calc(16px + env(safe-area-inset-bottom))', touchAction: 'none' }}
+      >
+        <button
+          type="button"
+          aria-label="Move left"
+          className="bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95 shadow-lg"
+          style={{ touchAction: 'none' }}
+          onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); touchRef.current.left = true; }}
+          onPointerUp={(e) => { e.preventDefault(); touchRef.current.left = false; }}
+          onPointerCancel={() => { touchRef.current.left = false; }}
+          onPointerLeave={() => { touchRef.current.left = false; }}
+        >←</button>
+        <button
+          type="button"
+          aria-label="Jump"
+          className="bg-valentine-gold text-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95 shadow-lg"
+          style={{ touchAction: 'none' }}
+          onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); touchRef.current.jump = true; }}
+          onPointerUp={(e) => { e.preventDefault(); touchRef.current.jump = false; }}
+          onPointerCancel={() => { touchRef.current.jump = false; }}
+          onPointerLeave={() => { touchRef.current.jump = false; }}
+        >▲</button>
+        <button
+          type="button"
+          aria-label="Move right"
+          className="bg-valentine-pink text-primary-foreground font-pixel text-lg px-6 py-4 rounded-lg border-2 border-valentine-red active:scale-95 shadow-lg"
+          style={{ touchAction: 'none' }}
+          onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); touchRef.current.right = true; }}
+          onPointerUp={(e) => { e.preventDefault(); touchRef.current.right = false; }}
+          onPointerCancel={() => { touchRef.current.right = false; }}
+          onPointerLeave={() => { touchRef.current.right = false; }}
+        >→</button>
       </div>
     </div>
   );
